@@ -207,6 +207,6 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = exportedOpenApis;
 }
 
-if (globalThis.window) {
+if (!isNodeEnv) {
   globalThis.OpenApis = exportedOpenApis;
 }

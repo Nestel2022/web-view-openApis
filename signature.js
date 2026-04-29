@@ -64,6 +64,6 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = exportedSignatureUtils;
 }
 
-if (globalThis.window !== undefined) {
+if (!isNodeEnv) {
   globalThis.SignatureUtils = exportedSignatureUtils;
 }

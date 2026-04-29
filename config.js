@@ -76,6 +76,10 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = exportedConfig;
 }
 
-if (globalThis.window !== undefined) {
+if (!isNodeLikeEnvironment()) {
   globalThis.AppConfig = exportedConfig;
+}
+
+function isNodeLikeEnvironment() {
+  return typeof module !== "undefined" && !!module.exports;
 }
