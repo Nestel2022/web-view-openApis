@@ -81,28 +81,12 @@
       <button onclick="sendTestMessage()">Send Test Message</button>
       <button onclick="closeWebView()" class="danger">Close WebView</button>
       <button onclick="makePay()">Pay</button>
-      <div class="log" id="log"></div>
+      <p><strong>AuthCode:</strong> <span id="authCodeLabel">-</span></p>
     </div>
 
     <script>
-      // Initialize logging system
-      function initLog() {
-        const logEl = document.getElementById("log");
-        logEl.innerHTML = "<div>=== Communication Log Started ===</div>";
-      }
-
       function log(message, type = "info") {
-        const logEl = document.getElementById("log");
-        const timestamp = new Date().toLocaleTimeString();
-        const color =
-          type === "error" ? "red"
-          : type === "success" ? "green"
-          : "#1890ff";
-
-        logEl.innerHTML =
-          `<div style="color: ${color}; margin: 3px 0; font-size: 12px;">[${timestamp}] ${message}</div>` +
-          logEl.innerHTML;
-        console.log(`[H5] ${message}`);
+        // Logging disabled by request.
       }
 
       function updateStatus(message, type = "info") {
@@ -189,7 +173,8 @@
 
       // Process obtained authorization code
       function handleAuthCode(authCode) {
-        log(`? Processing authorization code: ${authCode}`, "success");
+        const authCodeEl = document.getElementById("authCodeLabel");
+        authCodeEl.textContent = authCode || "-";
         // Can add logic to send authorization code to server here
         // sendToServer(authCode);
       }
@@ -271,9 +256,6 @@
 
       // Initialize after page load complete
       document.addEventListener("DOMContentLoaded", function () {
-        initLog();
-        log("DOM content loaded");
-
         // Delay initialization to ensure all resources are loaded
         setTimeout(init, 100);
       });
