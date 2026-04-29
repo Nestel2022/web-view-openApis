@@ -66,6 +66,8 @@
       let authCodeSolicitado = false;
       let appIdSolicitado = false;
       let openApiSolicitado = false;
+      let authCodeActual = "";
+      let appIdActual = "";
 
       const fallbackConfig = {
         ENV: "UAT",
@@ -145,6 +147,7 @@
 
         if (payload.type === "appId") {
           if (payload.success && payload.appId) {
+            appIdActual = payload.appId;
             actualizarEstado("AppID obtenido correctamente.", "success");
             mostrarAppId(payload.appId);
           } else {
@@ -158,6 +161,7 @@
 
         if (payload.type === "authResponse") {
           if (payload.success && payload.authCode) {
+            authCodeActual = payload.authCode;
             actualizarEstado("Autorizacion exitosa.", "success");
             mostrarAuthCode(payload.authCode);
             consultarOpenApiUsuario();
@@ -305,20 +309,17 @@
       }
 
       async function getConfigAccessTokenInline(data) {
-        const myApi = getMyApi();
-        let authCode;
+        const authCode = authCodeActual;
+        const appId = appIdActual;
 
-        try {
-          const res = await myApi.getAuthCode({ scopes: ["User_Customer_Info"] });
-          authCode = res.authCode;
-        } catch (error) {
-          console.warn("Fallo User_Customer_Info, se intentara User_Base_Info", error);
-          const fallbackRes = await myApi.getAuthCode({ scopes: ["User_Base_Info"] });
-          authCode = fallbackRes.authCode;
+        if (!authCode) {
+          throw new Error("No hay authCode disponible desde el flujo inicial.");
         }
 
-        const appIdResult = myApi.getAppIdSync();
-        const appId = appIdResult.appId || appIdResult;
+        if (!appId) {
+          throw new Error("No hay appId disponible desde el flujo inicial.");
+        }
+
         const body = {
           appId,
           grantType: "AUTHORIZATION_CODE",
@@ -367,10 +368,12 @@
       async function getConfigInquiryUserInfoInline(url) {
         const runtimeConfig = getRuntimeConfig();
         const data = runtimeConfig.getGWPConfig(runtimeConfig.ENV);
-        const myApi = getMyApi();
         const responseAccessToken = await getAccessTokenInline(url, data);
-        const appIdResult = myApi.getAppIdSync();
-        const appId = appIdResult.appId || appIdResult;
+        const appId = appIdActual;
+
+        if (!appId) {
+          throw new Error("No hay appId disponible desde el flujo inicial.");
+        }
 
         const body = {
           appId,
