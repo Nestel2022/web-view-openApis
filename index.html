@@ -24,6 +24,11 @@
           </div>
 
           <div class="mt-6 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+            <p class="text-xs uppercase tracking-widest text-slate-400">AppID</p>
+            <p class="mt-2 break-all text-lg font-semibold text-cyan-300" id="appIdLabel">-</p>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
             <p class="text-xs uppercase tracking-widest text-slate-400">AuthCode</p>
             <p class="mt-2 break-all text-lg font-semibold text-emerald-300" id="authCodeLabel">-</p>
           </div>
@@ -33,6 +38,7 @@
 
     <script>
       let authCodeSolicitado = false;
+      let appIdSolicitado = false;
 
       // Muestra mensajes de estado al usuario en la parte superior de la pantalla.
       function actualizarEstado(message, type = "info") {
@@ -81,11 +87,24 @@
         }
       }
 
-      // Procesa solo respuestas de autorizacion y extrae authCode cuando viene exitoso.
+      // Procesa respuestas de appID y autorizacion para actualizar la interfaz.
       function procesarMensajeRecibido(data) {
         const payload = data && data.data ? data.data : data;
 
         if (!payload || typeof payload !== "object") {
+          return;
+        }
+
+        if (payload.type === "appId") {
+          if (payload.success && payload.appId) {
+            actualizarEstado("AppID obtenido correctamente.", "success");
+            mostrarAppId(payload.appId);
+          } else {
+            actualizarEstado(
+              `Fallo al obtener appID: ${payload.error || "Error desconocido"}`,
+              "error",
+            );
+          }
           return;
         }
 
@@ -106,6 +125,30 @@
       function mostrarAuthCode(authCode) {
         const authCodeEl = document.getElementById("authCodeLabel");
         authCodeEl.textContent = authCode || "-";
+      }
+
+      // Imprime el appID en la etiqueta visible de la interfaz.
+      function mostrarAppId(appId) {
+        const appIdEl = document.getElementById("appIdLabel");
+        appIdEl.textContent = appId || "-";
+      }
+
+      // Solicita al mini programa el appID.
+      function obtenerAppId() {
+        if (appIdSolicitado) {
+          return;
+        }
+        appIdSolicitado = true;
+
+        const message = {
+          action: "getAppID",
+          requestId: "req_appid_" + Date.now(),
+          timestamp: new Date().toISOString(),
+        };
+
+        if (!enviarSolicitudAlMiniPrograma(message)) {
+          actualizarEstado("No fue posible enviar la solicitud de appID.", "error");
+        }
       }
 
       // Solicita al mini programa el permiso auth_base para obtener authCode.
@@ -133,7 +176,8 @@
       function inicializar() {
         if (window.my && typeof window.my.postMessage === "function") {
           if (configurarEscuchaDeMensajes()) {
-            actualizarEstado("Entorno listo para solicitar authCode.", "success");
+            actualizarEstado("Entorno listo para solicitar appID y authCode.", "success");
+            obtenerAppId();
             obtenerAuthCode();
           } else {
             actualizarEstado("No fue posible configurar la escucha de mensajes.", "error");
