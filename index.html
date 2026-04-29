@@ -39,7 +39,7 @@
 
           <div class="mt-4 grid gap-4 lg:grid-cols-2">
             <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <p class="text-xs uppercase tracking-widest text-slate-400">ApplyToken Request</p>
+              <p class="text-xs uppercase tracking-widest text-slate-400">ApplyToken Curl</p>
               <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-sky-200" id="applyTokenRequestLabel">-</pre>
             </div>
 
@@ -49,7 +49,7 @@
             </div>
 
             <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <p class="text-xs uppercase tracking-widest text-slate-400">InquiryUserInfo Request</p>
+              <p class="text-xs uppercase tracking-widest text-slate-400">InquiryUserInfo Curl</p>
               <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-amber-200" id="inquiryRequestLabel">-</pre>
             </div>
 
@@ -188,6 +188,11 @@
 
       function renderJson(elementId, data) {
         const responseEl = document.getElementById(elementId);
+        if (typeof data === "string") {
+          responseEl.textContent = data;
+          return;
+        }
+
         try {
           responseEl.textContent = JSON.stringify(data, null, 2);
         } catch (error) {
@@ -262,24 +267,65 @@
         return globalThis.my;
       }
 
-      function requestWithLogsInline(requestConfig) {
-        const myApi = getMyApi();
+      function escapeShellValueInline(value) {
+        const singleQuoteEscape = "'\"'\"'";
+        return String(value).replaceAll("'", singleQuoteEscape);
+      }
 
-        if (typeof myApi.requestLogs === "function") {
-          return myApi.requestLogs(requestConfig);
-        }
+      function buildCurlCommandInline(requestConfig) {
+        const method = requestConfig.method || "GET";
+        const headers = requestConfig.headers || {};
+        const headerFlags = Object.entries(headers)
+          .map(([key, value]) => {
+            const headerValue = key + ": " + value;
+            return "-H '" + escapeShellValueInline(headerValue) + "'";
+          })
+          .join(" ");
+        const bodyFlag = requestConfig.data === undefined
+          ? ""
+          : " --data-raw '" + escapeShellValueInline(JSON.stringify(requestConfig.data)) + "'";
+        const urlValue = escapeShellValueInline(requestConfig.url);
+        const headerSegment = headerFlags ? " " + headerFlags : "";
 
-        if (typeof myApi.request === "function") {
-          return new Promise((resolve, reject) => {
-            myApi.request({
-              ...requestConfig,
-              success: resolve,
-              fail: reject,
-            });
+        return "curl -X " + method + " '" + urlValue + "'" + headerSegment + bodyFlag;
+      }
+
+      async function executeHttpRequestInline(requestConfig) {
+        if (typeof fetch === "function") {
+          const hasBody = requestConfig.data !== undefined;
+          const headers = hasBody ? { "Content-Type": "application/json" } : {};
+          Object.assign(headers, requestConfig.headers ?? {});
+          const response = await fetch(requestConfig.url, {
+            method: requestConfig.method || "GET",
+            headers,
+            body: hasBody ? JSON.stringify(requestConfig.data) : undefined,
           });
+          const rawBody = await response.text();
+
+          let data = rawBody;
+          if (rawBody) {
+            try {
+              data = JSON.parse(rawBody);
+            } catch {
+              data = rawBody;
+            }
+          }
+
+          return {
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            data,
+            rawBody,
+            curl: buildCurlCommandInline({
+              ...requestConfig,
+              headers,
+            }),
+          };
         }
 
-        throw new Error("El entorno no soporta requestLogs ni request.");
+        throw new TypeError("fetch no esta disponible en la vista.");
       }
 
       async function getTokensInline() {
@@ -355,10 +401,10 @@
           },
         };
 
-        openApiDebug.applyTokenRequest = requestConfig;
+        openApiDebug.applyTokenRequest = buildCurlCommandInline(requestConfig);
         actualizarPanelesOpenApi();
 
-        const response = await requestWithLogsInline(requestConfig);
+        const response = await executeHttpRequestInline(requestConfig);
         openApiDebug.applyTokenResponse = response;
         actualizarPanelesOpenApi();
 
@@ -412,10 +458,10 @@
           },
         };
 
-        openApiDebug.inquiryRequest = requestConfig;
+        openApiDebug.inquiryRequest = buildCurlCommandInline(requestConfig);
         actualizarPanelesOpenApi();
 
-        const response = await requestWithLogsInline(requestConfig);
+        const response = await executeHttpRequestInline(requestConfig);
         openApiDebug.inquiryResponse = response;
         actualizarPanelesOpenApi();
 

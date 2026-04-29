@@ -12,24 +12,65 @@ function getMyApi() {
   return my;
 }
 
-function requestWithLogs(requestConfig) {
-  const myApi = getMyApi();
+function escapeShellValue(value) {
+  const singleQuoteEscape = "'\"'\"'";
+  return String(value).replaceAll("'", singleQuoteEscape);
+}
 
-  if (typeof myApi.requestLogs === "function") {
-    return myApi.requestLogs(requestConfig);
-  }
+function buildCurlCommand(requestConfig) {
+  const method = requestConfig.method || "GET";
+  const headers = requestConfig.headers || {};
+  const headerFlags = Object.entries(headers)
+    .map(([key, value]) => {
+      const headerValue = key + ": " + value;
+      return "-H '" + escapeShellValue(headerValue) + "'";
+    })
+    .join(" ");
+  const bodyFlag = requestConfig.data === undefined
+    ? ""
+    : " --data-raw '" + escapeShellValue(JSON.stringify(requestConfig.data)) + "'";
+  const urlValue = escapeShellValue(requestConfig.url);
+  const headerSegment = headerFlags ? " " + headerFlags : "";
 
-  if (typeof myApi.request === "function") {
-    return new Promise((resolve, reject) => {
-      myApi.request({
-        ...requestConfig,
-        success: resolve,
-        fail: reject,
-      });
+  return "curl -X " + method + " '" + urlValue + "'" + headerSegment + bodyFlag;
+}
+
+async function executeHttpRequest(requestConfig) {
+  if (typeof fetch === "function") {
+    const hasBody = requestConfig.data !== undefined;
+    const headers = hasBody ? { "Content-Type": "application/json" } : {};
+    Object.assign(headers, requestConfig.headers ?? {});
+    const response = await fetch(requestConfig.url, {
+      method: requestConfig.method || "GET",
+      headers,
+      body: hasBody ? JSON.stringify(requestConfig.data) : undefined,
     });
+    const rawBody = await response.text();
+
+    let data = rawBody;
+    if (rawBody) {
+      try {
+        data = JSON.parse(rawBody);
+      } catch {
+        data = rawBody;
+      }
+    }
+
+    return {
+      ok: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      data,
+      rawBody,
+      curl: buildCurlCommand({
+        ...requestConfig,
+        headers,
+      }),
+    };
   }
 
-  throw new Error("No existe requestLogs ni request en el entorno my.");
+  throw new TypeError("fetch no esta disponible en este entorno.");
 }
 
 /**
@@ -121,7 +162,7 @@ async function getAccessToken(url, dataService) {
     headers: headersApply,
   };
 
-  return requestWithLogs(requestConfig);
+  return executeHttpRequest(requestConfig);
 }
 
 /**
@@ -181,7 +222,7 @@ async function getInquiryUserInfo(urlUsers, urlApplyToken, headers = {}) {
     headers: headersApply,
   };
 
-  return requestWithLogs(requestConfig);
+  return executeHttpRequest(requestConfig);
 }
 
 /**
@@ -201,6 +242,8 @@ const exportedOpenApis = {
   getConfigInquiryUserInfo,
   getConfigAccessToken,
   generateSignatureFormat,
+  buildCurlCommand,
+  executeHttpRequest,
 };
 
 if (typeof module !== "undefined" && module.exports) {
