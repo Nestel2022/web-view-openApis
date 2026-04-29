@@ -37,9 +37,26 @@
             <p class="mt-2 break-all text-lg font-semibold text-emerald-300" id="authCodeLabel">-</p>
           </div>
 
-          <div class="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-            <p class="text-xs uppercase tracking-widest text-slate-400">OpenAPI InquiryUserInfo</p>
-            <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-amber-200" id="openApiResponseLabel">-</pre>
+          <div class="mt-4 grid gap-4 lg:grid-cols-2">
+            <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <p class="text-xs uppercase tracking-widest text-slate-400">ApplyToken Request</p>
+              <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-sky-200" id="applyTokenRequestLabel">-</pre>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <p class="text-xs uppercase tracking-widest text-slate-400">ApplyToken Response</p>
+              <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-emerald-200" id="applyTokenResponseLabel">-</pre>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <p class="text-xs uppercase tracking-widest text-slate-400">InquiryUserInfo Request</p>
+              <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-amber-200" id="inquiryRequestLabel">-</pre>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <p class="text-xs uppercase tracking-widest text-slate-400">InquiryUserInfo Response</p>
+              <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-fuchsia-200" id="inquiryResponseLabel">-</pre>
+            </div>
           </div>
         </section>
       </main>
@@ -49,6 +66,26 @@
       let authCodeSolicitado = false;
       let appIdSolicitado = false;
       let openApiSolicitado = false;
+
+      const fallbackConfig = {
+        ENV: "UAT",
+        userInfo: "https://superapp-api-test.miniprogramas.claro.com.co/",
+        GWPConfig: {
+          UAT: {
+            clientId: "2025070414560001",
+            merchantId: "143",
+            privateKey:
+              "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC5DA0RcwWhtyr+6/PKRNs40Wc64zlBxBFHScY2pvRit9f6wDpG3O5vi3tzSeSYvclSGPvs8pCop/9s57fGxiZyZ39bV0l6/UQc2IVAOcIbuOYyj+VFnKabtpwTlX7cci/qqzMAFbvHZ44/EvNp0kYYPXpMY2U6g/B55ZyP4k5O86qYU9zw7KnLau6ZyMHQvNNadPTYU4QTwZJkbaJrGJgDGRWtGOQGEfGjYWdMayFP8XCezedWr2bLTSVNbPL0qzCH1W9QkIX+EUi7EVSz4CvKoqD/n0HC/ZBYaLSmfBxAwPKJJ+aJFjtdZzq+Mj24v3aCw4gn6HPqi0Yfmju15Fb3AgMBAAECggEAM3jQK8HgV6bBDW6pfeJgTjIlMkKhGxOEMN2rBmmzQcBckdGlhC+RHTLhsGRl8zybQrxTWwnvxhIQ4QSlYGOeryTtzoT9mfnX1+Q8UGygeyCX24meHxpfV6HYUTQ8uOoEPRTI12W0OVerQA0v6wgD2ltDaPse3cN0gRumzHkJCjmQuoirMqwuNIM5IoiENlB4Mn5xaCCzw9EACnFR+DoKGD0gG434BiACc6BMawg2vo0TEaW6Z6f99sXSNpTAWDPPqPpysrQApWmwR2F5MaQwd0Jqrm4YQCKXGr1Swuzbrx5vU2lp7rz/JugsAD1sLD7KNh/KFpzkuzVQNLq373RbyQKBgQDmeySOJIRz1Grd69DhRlvcF3nIQln8U3AfMLodEM/ObeuBO8tuM7hjDWqrFuEtIL7MPGcAXhQSTrOupo+kmbg/4Sdm0uMvDIAxDgJk2ytAo0L4CzApxQNMNzlH4RAzQbmsClXSCbPHrmirO1BHeUWvYlxR2jch2APMPV0PTS/THwKBgQDNiRumsJw+EnLaGqyhXqVSIrGlQDRbz1VnuPOr3Yu0pcC/V4oP/H4wAMz9wg2R0LQwTrPGGQF8QqHcix2cXaEJAUG60OaxrYB4Pi8YP0I0lhWsouNujQ06YtTBUInc2WQbyQV5Jl94ISzDkEKGI5KLKArq26CTiH+MyQaHeDKZKQKBgFGy7wdP3H+umV8nGzjvltpSnAGnu3wdG46C2EY7Ul5LSoLZ7keXH9JEzD3vc0xq4hdFhgF0V8sRiNHtCtf/AXfrWOsy8AMafEpnO+QCaLeV58RDOwRjaMLYhH59Qh/ZOXbJhxhYBhlPMp0X/mIHk/MSe8UsBAUELHx2eAlXhA9jAoGAdE1NFDmDb6xIyRmm7Xj820k+dF+sQPdFQHfriijG0OWp95u1R+58CPWrCTwxKX2LOHqQR1wG9yVNKdqeWsiwQsQvSWLD525h76hgRbwl3lO+1/0j7H5sKcma0ficyhdJCl/pdPA9vWAoUFDlE7o1RgDWjKbSaikm46csxqNBHmECgYByrpnNY7rFEhQFXIWI72Iw2cjiAWXMcb/2HFY+U0a4+5Z9M3JYBdvVbzmIAWuEolvz1oAN2I4nd5nYJdrTfp8fzLDXPLeOmtyRgiCcIjXorLyQpSCX3RvB21EvoY2kXEku30zlkGF1+6jLiHqF2UgEOBDazVQfKSd3mV2xaJd5nA==",
+          },
+        },
+      };
+
+      const openApiDebug = {
+        applyTokenRequest: null,
+        applyTokenResponse: null,
+        inquiryRequest: null,
+        inquiryResponse: null,
+      };
 
       // Muestra mensajes de estado al usuario en la parte superior de la pantalla.
       function actualizarEstado(message, type = "info") {
@@ -145,15 +182,241 @@
         appIdEl.textContent = appId || "-";
       }
 
-      // Imprime en pantalla la respuesta cruda de la consulta OpenAPI.
-      function mostrarRespuestaOpenApi(data) {
-        const responseEl = document.getElementById("openApiResponseLabel");
+      function renderJson(elementId, data) {
+        const responseEl = document.getElementById(elementId);
         try {
           responseEl.textContent = JSON.stringify(data, null, 2);
         } catch (error) {
-          console.warn("No fue posible serializar la respuesta OpenAPI", error);
+          console.warn("No fue posible serializar datos de depuracion", error);
           responseEl.textContent = String(data || "-");
         }
+      }
+
+      function actualizarPanelesOpenApi() {
+        renderJson("applyTokenRequestLabel", openApiDebug.applyTokenRequest || "-");
+        renderJson("applyTokenResponseLabel", openApiDebug.applyTokenResponse || "-");
+        renderJson("inquiryRequestLabel", openApiDebug.inquiryRequest || "-");
+        renderJson("inquiryResponseLabel", openApiDebug.inquiryResponse || "-");
+      }
+
+      function getRuntimeConfig() {
+        if (globalThis.AppConfig && typeof globalThis.AppConfig.getGWPConfig === "function") {
+          return globalThis.AppConfig;
+        }
+
+        return {
+          ...fallbackConfig,
+          getGWPConfig(env) {
+            return fallbackConfig.GWPConfig[env] || fallbackConfig.GWPConfig.UAT;
+          },
+        };
+      }
+
+      function ensureSigningSupport() {
+        if (!globalThis.KEYUTIL || !globalThis.KJUR || !globalThis.hextob64) {
+          throw new Error("jsrsasign no esta disponible en la vista.");
+        }
+      }
+
+      function ensurePEM(privateKey) {
+        if (!privateKey) {
+          throw new Error("No hay clave privada disponible para firmar.");
+        }
+
+        if (privateKey.includes("BEGIN PRIVATE KEY")) {
+          return privateKey;
+        }
+
+        return `-----BEGIN PRIVATE KEY-----${privateKey}-----END PRIVATE KEY-----`;
+      }
+
+      function signContentInline(content, privateKeyPem) {
+        ensureSigningSupport();
+
+        const privateKey = globalThis.KEYUTIL.getKey(privateKeyPem);
+        const sig = new globalThis.KJUR.crypto.Signature({ alg: "SHA256withRSA" });
+        sig.init(privateKey);
+        sig.updateString(content);
+
+        return globalThis.hextob64(sig.sign());
+      }
+
+      function signGeneratorInline(data) {
+        const config = getRuntimeConfig();
+        const envConfig = config.getGWPConfig(config.ENV);
+        const requestMap = data.reqMap || {};
+        const content = `${data.HTTP_METHOD} ${data.URL}\n${data.CLIENT_ID || envConfig.clientId}.${data.MERCHANT_ID || envConfig.merchantId}.${data.REQUEST_TIME}.${JSON.stringify(requestMap)}`;
+        const signed = signContentInline(content, ensurePEM(data.PRIVATE_KEY || envConfig.privateKey));
+        return `algorithm=RSA256, keyVersion=0, signature=${signed}`;
+      }
+
+      function getMyApi() {
+        if (!globalThis.my) {
+          throw new Error("No se detecto el objeto my del mini programa.");
+        }
+
+        return globalThis.my;
+      }
+
+      function requestWithLogsInline(requestConfig) {
+        const myApi = getMyApi();
+
+        if (typeof myApi.requestLogs === "function") {
+          return myApi.requestLogs(requestConfig);
+        }
+
+        if (typeof myApi.request === "function") {
+          return new Promise((resolve, reject) => {
+            myApi.request({
+              ...requestConfig,
+              success: resolve,
+              fail: reject,
+            });
+          });
+        }
+
+        throw new Error("El entorno no soporta requestLogs ni request.");
+      }
+
+      async function getTokensInline() {
+        const myApi = getMyApi();
+
+        try {
+          const { result } = await myApi.call("MQFetchSelfcareParameters", {});
+          return result || {};
+        } catch (error) {
+          console.warn("No fue posible obtener tokens MQFetchSelfcareParameters", error);
+          return {};
+        }
+      }
+
+      function generateSignatureFormatInline(globaldata, requestGateway, requestTimeGateway, url) {
+        return {
+          HTTP_METHOD: "POST",
+          URL: url,
+          CLIENT_ID: globaldata.clientId,
+          MERCHANT_ID: globaldata.merchantId,
+          REQUEST_TIME: requestTimeGateway,
+          PRIVATE_KEY: globaldata.privateKey,
+          reqMap: {
+            ...requestGateway,
+          },
+        };
+      }
+
+      async function getConfigAccessTokenInline(data) {
+        const myApi = getMyApi();
+        let authCode;
+
+        try {
+          const res = await myApi.getAuthCode({ scopes: ["User_Customer_Info"] });
+          authCode = res.authCode;
+        } catch (error) {
+          console.warn("Fallo User_Customer_Info, se intentara User_Base_Info", error);
+          const fallbackRes = await myApi.getAuthCode({ scopes: ["User_Base_Info"] });
+          authCode = fallbackRes.authCode;
+        }
+
+        const appIdResult = myApi.getAppIdSync();
+        const appId = appIdResult.appId || appIdResult;
+        const body = {
+          appId,
+          grantType: "AUTHORIZATION_CODE",
+          authClientId: data.clientId,
+          authCode,
+        };
+
+        const requestTimeGateway = Math.floor(Date.now() / 1000).toString();
+        const url = "/miniprogram/api/v2/authorization/applyToken";
+        const signatureFormat = generateSignatureFormatInline(data, body, requestTimeGateway, url);
+        const signature = signGeneratorInline(signatureFormat);
+
+        return {
+          clientId: data.clientId,
+          merchantId: data.merchantId,
+          signature,
+          requestTimeGateway,
+          body,
+        };
+      }
+
+      async function getAccessTokenInline(url, dataService) {
+        const data = await getConfigAccessTokenInline(dataService);
+        const requestConfig = {
+          url: `${url}applyToken`,
+          method: "POST",
+          data: data.body,
+          headers: {
+            "Client-Id": data.clientId,
+            "Request-Time": data.requestTimeGateway,
+            Signature: data.signature,
+            "Merchant-id": data.merchantId,
+          },
+        };
+
+        openApiDebug.applyTokenRequest = requestConfig;
+        actualizarPanelesOpenApi();
+
+        const response = await requestWithLogsInline(requestConfig);
+        openApiDebug.applyTokenResponse = response;
+        actualizarPanelesOpenApi();
+
+        return response;
+      }
+
+      async function getConfigInquiryUserInfoInline(url) {
+        const runtimeConfig = getRuntimeConfig();
+        const data = runtimeConfig.getGWPConfig(runtimeConfig.ENV);
+        const myApi = getMyApi();
+        const responseAccessToken = await getAccessTokenInline(url, data);
+        const appIdResult = myApi.getAppIdSync();
+        const appId = appIdResult.appId || appIdResult;
+
+        const body = {
+          appId,
+          accessToken: responseAccessToken?.data?.accessToken || "",
+          authClientId: data.clientId,
+        };
+
+        const requestTimeGateway = Math.floor(Date.now() / 1000).toString();
+        const urlConfig = "/miniprogram/api/v2/users/inquiryUserBasicInfo";
+        const signatureFormat = generateSignatureFormatInline(data, body, requestTimeGateway, urlConfig);
+        const signature = signGeneratorInline(signatureFormat);
+
+        return {
+          clientId: data.clientId,
+          merchantId: data.merchantId,
+          signature,
+          requestTimeGateway,
+          body,
+        };
+      }
+
+      async function getInquiryUserInfoInline(urlUsers, urlApplyToken) {
+        const tokens = await getTokensInline();
+        const data = await getConfigInquiryUserInfoInline(urlApplyToken);
+        const requestConfig = {
+          url: `${urlUsers}inquiryUserBasicInfo`,
+          method: "POST",
+          data: data.body,
+          headers: {
+            "Client-Id": data.clientId,
+            "Request-Time": data.requestTimeGateway,
+            Signature: data.signature,
+            "Merchant-id": data.merchantId,
+            "X-MC-DEVICE-ID": tokens.device_id || "",
+            "X-MC-USER-AGENT": tokens.user_agent || "",
+          },
+        };
+
+        openApiDebug.inquiryRequest = requestConfig;
+        actualizarPanelesOpenApi();
+
+        const response = await requestWithLogsInline(requestConfig);
+        openApiDebug.inquiryResponse = response;
+        actualizarPanelesOpenApi();
+
+        return response;
       }
 
       // Ejecuta el consumo de OpenAPIs directamente desde la vista web.
@@ -162,24 +425,24 @@
           return;
         }
 
-        if (!globalThis.AppConfig || !globalThis.OpenApis) {
-          actualizarEstado("No se cargaron utilidades de OpenAPI en la vista.", "error");
-          return;
-        }
-
         openApiSolicitado = true;
         actualizarEstado("Consumiendo OpenAPIs desde la vista...", "info");
+        actualizarPanelesOpenApi();
 
         try {
-          const baseUrl = globalThis.AppConfig.userInfo;
+          const runtimeConfig = getRuntimeConfig();
+          const baseUrl = runtimeConfig.userInfo;
           const urlApplyToken = `${baseUrl}miniprogram/api/v2/authorization/`;
           const urlUsers = `${baseUrl}miniprogram/api/v2/users/`;
 
-          const response = await globalThis.OpenApis.getInquiryUserInfo(urlUsers, urlApplyToken, {});
-          mostrarRespuestaOpenApi(response);
+          await getInquiryUserInfoInline(urlUsers, urlApplyToken);
           actualizarEstado("OpenAPI inquiryUserBasicInfo consumida correctamente.", "success");
         } catch (error) {
-          mostrarRespuestaOpenApi(error);
+          openApiDebug.inquiryResponse = {
+            error: error?.message || String(error),
+            raw: error,
+          };
+          actualizarPanelesOpenApi();
           actualizarEstado("Fallo al consumir OpenAPIs desde la vista.", "error");
         }
       }
