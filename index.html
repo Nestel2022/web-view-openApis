@@ -58,6 +58,11 @@
               <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-fuchsia-200" id="inquiryResponseLabel">-</pre>
             </div>
           </div>
+
+          <div class="mt-4 rounded-2xl border border-rose-300/20 bg-rose-500/5 p-4">
+            <p class="text-xs uppercase tracking-widest text-slate-400">Live Log ApplyToken</p>
+            <pre class="mt-2 max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs text-rose-100" id="applyTokenLiveLogLabel">-</pre>
+          </div>
         </section>
       </main>
     </div>
@@ -68,6 +73,7 @@
       let openApiSolicitado = false;
       let authCodeActual = "";
       let appIdActual = "";
+      let applyTokenLiveLog = [];
 
       const fallbackConfig = {
         ENV: "UAT",
@@ -148,6 +154,7 @@
         if (payload.type === "appId") {
           if (payload.success && payload.appId) {
             appIdActual = payload.appId;
+            logApplyToken("AppID recibido desde el flujo inicial", { appId: payload.appId });
             actualizarEstado("AppID obtenido correctamente.", "success");
             mostrarAppId(payload.appId);
           } else {
@@ -162,6 +169,7 @@
         if (payload.type === "authResponse") {
           if (payload.success && payload.authCode) {
             authCodeActual = payload.authCode;
+            logApplyToken("authCode recibido desde el flujo inicial", { authCode: payload.authCode });
             actualizarEstado("Autorizacion exitosa.", "success");
             mostrarAuthCode(payload.authCode);
             consultarOpenApiUsuario();
@@ -206,6 +214,27 @@
         renderJson("applyTokenResponseLabel", openApiDebug.applyTokenResponse || "-");
         renderJson("inquiryRequestLabel", openApiDebug.inquiryRequest || "-");
         renderJson("inquiryResponseLabel", openApiDebug.inquiryResponse || "-");
+        renderJson("applyTokenLiveLogLabel", applyTokenLiveLog.length ? applyTokenLiveLog.join("\n") : "-");
+      }
+
+      function logApplyToken(message, data) {
+        const timestamp = new Date().toISOString();
+        let line = `[${timestamp}] ${message}`;
+
+        if (data !== undefined) {
+          try {
+            line += ` | ${JSON.stringify(data)}`;
+          } catch {
+            line += ` | ${String(data)}`;
+          }
+        }
+
+        applyTokenLiveLog.push(line);
+        if (applyTokenLiveLog.length > 120) {
+          applyTokenLiveLog = applyTokenLiveLog.slice(-120);
+        }
+
+        actualizarPanelesOpenApi();
       }
 
       function getRuntimeConfig() {
@@ -330,11 +359,16 @@
 
       async function getTokensInline() {
         const myApi = getMyApi();
+        logApplyToken("Solicitando MQFetchSelfcareParameters");
 
         try {
           const { result } = await myApi.call("MQFetchSelfcareParameters", {});
+          logApplyToken("MQFetchSelfcareParameters respondio", result || {});
           return result || {};
         } catch (error) {
+          logApplyToken("Fallo MQFetchSelfcareParameters", {
+            error: error?.message || String(error),
+          });
           console.warn("No fue posible obtener tokens MQFetchSelfcareParameters", error);
           return {};
         }
@@ -358,11 +392,20 @@
         const authCode = authCodeActual;
         const appId = appIdActual;
 
+        logApplyToken("Preparando payload de applyToken", {
+          appIdDisponible: Boolean(appId),
+          authCodeDisponible: Boolean(authCode),
+          clientId: data.clientId,
+          merchantId: data.merchantId,
+        });
+
         if (!authCode) {
+          logApplyToken("No existe authCode para applyToken");
           throw new Error("No hay authCode disponible desde el flujo inicial.");
         }
 
         if (!appId) {
+          logApplyToken("No existe appId para applyToken");
           throw new Error("No hay appId disponible desde el flujo inicial.");
         }
 
@@ -376,7 +419,15 @@
         const requestTimeGateway = Math.floor(Date.now() / 1000).toString();
         const url = "/miniprogram/api/v2/authorization/applyToken";
         const signatureFormat = generateSignatureFormatInline(data, body, requestTimeGateway, url);
+        logApplyToken("Generando firma de applyToken", {
+          requestTimeGateway,
+          url,
+          body,
+        });
         const signature = signGeneratorInline(signatureFormat);
+        logApplyToken("Firma de applyToken generada", {
+          signaturePreview: signature.slice(0, 80),
+        });
 
         return {
           clientId: data.clientId,
@@ -388,10 +439,16 @@
       }
 
       async function getAccessTokenInline(url, dataService) {
+        applyTokenLiveLog = [];
         openApiDebug.applyTokenResponse = {
           stage: "applyToken",
           status: "pending",
         };
+        logApplyToken("Inicio de applyToken", {
+          url,
+          environmentClientId: dataService?.clientId,
+          environmentMerchantId: dataService?.merchantId,
+        });
         actualizarPanelesOpenApi();
 
         try {
@@ -409,14 +466,30 @@
           };
 
           openApiDebug.applyTokenRequest = buildCurlCommandInline(requestConfig);
+          logApplyToken("Curl de applyToken generado", {
+            curlPreview: openApiDebug.applyTokenRequest,
+          });
           actualizarPanelesOpenApi();
 
+          logApplyToken("Enviando fetch de applyToken", {
+            url: requestConfig.url,
+            method: requestConfig.method,
+          });
           const response = await executeHttpRequestInline(requestConfig);
+          logApplyToken("Fetch de applyToken respondio", {
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
+          });
           openApiDebug.applyTokenResponse = response;
           actualizarPanelesOpenApi();
 
           return response;
         } catch (error) {
+          logApplyToken("ApplyToken fallo", {
+            error: error?.message || String(error),
+            stack: error?.stack || null,
+          });
           openApiDebug.applyTokenResponse = {
             stage: "applyToken",
             status: "error",
