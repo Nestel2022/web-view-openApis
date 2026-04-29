@@ -388,27 +388,45 @@
       }
 
       async function getAccessTokenInline(url, dataService) {
-        const data = await getConfigAccessTokenInline(dataService);
-        const requestConfig = {
-          url: `${url}applyToken`,
-          method: "POST",
-          data: data.body,
-          headers: {
-            "Client-Id": data.clientId,
-            "Request-Time": data.requestTimeGateway,
-            Signature: data.signature,
-            "Merchant-id": data.merchantId,
-          },
+        openApiDebug.applyTokenResponse = {
+          stage: "applyToken",
+          status: "pending",
         };
-
-        openApiDebug.applyTokenRequest = buildCurlCommandInline(requestConfig);
         actualizarPanelesOpenApi();
 
-        const response = await executeHttpRequestInline(requestConfig);
-        openApiDebug.applyTokenResponse = response;
-        actualizarPanelesOpenApi();
+        try {
+          const data = await getConfigAccessTokenInline(dataService);
+          const requestConfig = {
+            url: `${url}applyToken`,
+            method: "POST",
+            data: data.body,
+            headers: {
+              "Client-Id": data.clientId,
+              "Request-Time": data.requestTimeGateway,
+              Signature: data.signature,
+              "Merchant-id": data.merchantId,
+            },
+          };
 
-        return response;
+          openApiDebug.applyTokenRequest = buildCurlCommandInline(requestConfig);
+          actualizarPanelesOpenApi();
+
+          const response = await executeHttpRequestInline(requestConfig);
+          openApiDebug.applyTokenResponse = response;
+          actualizarPanelesOpenApi();
+
+          return response;
+        } catch (error) {
+          openApiDebug.applyTokenResponse = {
+            stage: "applyToken",
+            status: "error",
+            error: error?.message || String(error),
+            authCodeDisponible: Boolean(authCodeActual),
+            appIdDisponible: Boolean(appIdActual),
+          };
+          actualizarPanelesOpenApi();
+          throw error;
+        }
       }
 
       async function getConfigInquiryUserInfoInline(url) {
