@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alipay Authorization Test</title>
+    <script src="https://appx/web-view.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+      }
+      button {
+        width: 100%;
+        padding: 15px;
+        margin: 10px 0;
+        background: #1677ff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .success {
+        background: #52c41a;
+      }
+      .danger {
+        background: #ff4d4f;
+      }
+      .log {
+        background: #f8f9fa;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        min-height: 200px;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .status-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .status-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>? Alipay Authorization Test</h2>
+      <p>Using correct communication method: my.postMessage / my.onMessage</p>
+
+      <div class="status status-info" id="status">
+        Initializing communication environment...
+      </div>
+
+      <button onclick="getAuthCode()">Get auth_base Authorization Code</button>
+      <button onclick="sendTestMessage()">Send Test Message</button>
+      <button onclick="closeWebView()" class="danger">Close WebView</button>
+      <button onclick="makePay()">Pay</button>
+      <div class="log" id="log"></div>
+    </div>
+
+    <script>
+      // Initialize logging system
+      function initLog() {
+        const logEl = document.getElementById("log");
+        logEl.innerHTML = "<div>=== Communication Log Started ===</div>";
+      }
+
+      function log(message, type = "info") {
+        const logEl = document.getElementById("log");
+        const timestamp = new Date().toLocaleTimeString();
+        const color =
+          type === "error" ? "red"
+          : type === "success" ? "green"
+          : "#1890ff";
+
+        logEl.innerHTML =
+          `<div style="color: ${color}; margin: 3px 0; font-size: 12px;">[${timestamp}] ${message}</div>` +
+          logEl.innerHTML;
+        console.log(`[H5] ${message}`);
+      }
+
+      function updateStatus(message, type = "info") {
+        const statusEl = document.getElementById("status");
+        statusEl.innerHTML = message;
+        statusEl.className = `status status-${type}`;
+      }
+
+      // ? Correct message sending method - using my.postMessage
+      function sendToMiniProgram(data) {
+        if (window.my && typeof window.my.postMessage === "function") {
+          try {
+            // Data format required by Alipay mini program
+            const messageData = { data: data };
+            window.my.postMessage(messageData);
+            log(`? Sent message: ${JSON.stringify(data)}`, "success");
+            return true;
+          } catch (error) {
+            log(`? Send failed: ${error.message}`, "error");
+            return false;
+          }
+        } else {
+          log("? Error: window.my.postMessage not available", "error");
+          updateStatus(
+            "Communication environment abnormal, please open in mini program WebView",
+            "error",
+          );
+          return false;
+        }
+      }
+
+      // ? Correct message receiving method - using my.onMessage
+      function setupMessageListener() {
+        if (window.my) {
+          window.my.onMessage = function (data) {
+            log(`? Received message: ${JSON.stringify(data)}`, "success");
+            handleReceivedMessage(data);
+          };
+          log("? my.onMessage listener set up successfully", "success");
+          return true;
+        } else {
+          log(
+            "? window.my does not exist, cannot set up message listener",
+            "error",
+          );
+          return false;
+        }
+      }
+
+      // Process received messages
+      function handleReceivedMessage(data) {
+        if (data && typeof data === "object") {
+          if (data.type === "authResponse") {
+            if (data.success) {
+              updateStatus(
+                `? Authorization successful! AuthCode: ${data.authCode}`,
+                "success",
+              );
+              log(
+                `? Authorization successful! AuthCode: ${data.authCode}`,
+                "success",
+              );
+              // Can process authorization code here, such as sending to server
+              handleAuthCode(data.authCode);
+            } else {
+              updateStatus(
+                `? Authorization failed: ${data.error || "Unknown error"}`,
+                "error",
+              );
+              log(`Authorization failed: ${data.error}`, "error");
+            }
+          } else if (data.type === "testResponse") {
+            log(`? Test response: ${data.message}`, "success");
+          } else if (data.type === "welcome") {
+            updateStatus(`? ${data.message}`, "success");
+            log(`Welcome message: ${data.message}`, "success");
+          } else {
+            log(`? Other message: ${JSON.stringify(data)}`, "info");
+          }
+        } else {
+          log(`? Received non-object message: ${data}`, "info");
+        }
+      }
+
+      // Process obtained authorization code
+      function handleAuthCode(authCode) {
+        log(`? Processing authorization code: ${authCode}`, "success");
+        // Can add logic to send authorization code to server here
+        // sendToServer(authCode);
+      }
+
+      // Business function
+      function getAuthCode() {
+        updateStatus("? Requesting authorization...", "info");
+
+        const message = {
+          action: "getAuthCode",
+          scopes: ["auth_base"],
+          requestId: "req_" + Date.now(),
+          timestamp: new Date().toISOString(),
+        };
+
+        if (sendToMiniProgram(message)) {
+          log("Authorization request sent, waiting for response...", "info");
+        }
+      }
+
+      function sendTestMessage() {
+        const message = {
+          action: "test",
+          message: "This is a test message",
+          timestamp: Date.now(),
+        };
+
+        sendToMiniProgram(message);
+      }
+
+      function closeWebView() {
+        sendToMiniProgram("action/closeWebview");
+      }
+
+      // Environment detection and initialization
+      function init() {
+        log("Starting Alipay WebView environment initialization...");
+
+        if (window.my) {
+          log("? window.my object exists", "success");
+          log(
+            `? my object available methods: ${Object.keys(window.my).join(
+              ", ",
+            )}`,
+            "info",
+          );
+
+          if (typeof window.my.postMessage === "function") {
+            log("? window.my.postMessage is available", "success");
+          } else {
+            log("? window.my.postMessage is not a function", "error");
+          }
+
+          // Set up message listener
+          if (setupMessageListener()) {
+            updateStatus(
+              "? Communication environment normal, ready to start testing",
+              "success",
+            );
+
+            // Send ready message
+            setTimeout(() => {
+              sendToMiniProgram({
+                action: "pageReady",
+                status: "loaded",
+                timestamp: Date.now(),
+              });
+            }, 500);
+          }
+        } else {
+          updateStatus(
+            "? Error: Not in Alipay mini program environment",
+            "error",
+          );
+          log("? window.my object does not exist", "error");
+          log(`? Current user agent: ${navigator.userAgent}`, "info");
+        }
+      }
+
+      // Initialize after page load complete
+      document.addEventListener("DOMContentLoaded", function () {
+        initLog();
+        log("DOM content loaded");
+
+        // Delay initialization to ensure all resources are loaded
+        setTimeout(init, 100);
+      });
+
+      // If page is already loaded, initialize directly
+      if (document.readyState === "complete") {
+        setTimeout(init, 100);
+      }
+
+      function makePay() {
+        my.tradePay({
+          paymentUrl:
+            "https://app-test.miniprogramas.claro.com.co/payment?paymentId=O2025012216385101090000",
+          success: function (res) {
+            my.alert({
+              content: JSON.stringify(res),
+            });
+          },
+          fail: function (res) {
+            my.alert({
+              content: JSON.stringify(res),
+            });
+          },
+        });
+      }
+    </script>
+  </body>
+</html>
