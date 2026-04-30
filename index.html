@@ -37,6 +37,18 @@
             <p class="mt-2 break-all text-lg font-semibold text-emerald-300" id="authCodeLabel">-</p>
           </div>
 
+          <div class="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+            <p class="text-xs uppercase tracking-widest text-slate-400">Datos de Usuario (Mini Program)</p>
+            <div class="mt-3 grid gap-2 text-sm text-slate-200 sm:grid-cols-2">
+              <p><span class="text-slate-400">userId:</span> <span id="userIdLabel">-</span></p>
+              <p><span class="text-slate-400">name:</span> <span id="nameLabel">-</span></p>
+              <p><span class="text-slate-400">surname:</span> <span id="surnameLabel">-</span></p>
+              <p><span class="text-slate-400">phoneNumber:</span> <span id="phoneNumberLabel">-</span></p>
+              <p class="sm:col-span-2 break-all"><span class="text-slate-400">email:</span> <span id="emailLabel">-</span></p>
+            </div>
+            <pre class="mt-3 max-h-48 overflow-auto whitespace-pre-wrap break-all text-xs text-cyan-200" id="userDataRawLabel">-</pre>
+          </div>
+
           <div class="mt-4 grid gap-4 lg:grid-cols-2">
             <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
               <p class="text-xs uppercase tracking-widest text-slate-400">ApplyToken Curl</p>
@@ -74,6 +86,7 @@
       let authCodeActual = "";
       let appIdActual = "";
       let applyTokenLiveLog = [];
+      let userDataSolicitado = false;
 
       const fallbackConfig = {
         ENV: "UAT",
@@ -143,42 +156,92 @@
         }
       }
 
+      function extraerPayloadMensaje(data) {
+        if (!data) {
+          return null;
+        }
+
+        let payload = data;
+        if (payload && typeof payload === "object" && payload.data !== undefined) {
+          payload = payload.data;
+        }
+
+        if (typeof payload === "string") {
+          try {
+            return JSON.parse(payload);
+          } catch {
+            return null;
+          }
+        }
+
+        return payload && typeof payload === "object" ? payload : null;
+      }
+
+      function procesarRespuestaAppId(payload) {
+        if (payload.success && payload.appId) {
+          appIdActual = payload.appId;
+          logApplyToken("AppID recibido desde el flujo inicial", { appId: payload.appId });
+          actualizarEstado("AppID obtenido correctamente.", "success");
+          mostrarAppId(payload.appId);
+          return;
+        }
+
+        actualizarEstado(
+          `Fallo al obtener appID: ${payload.error || "Error desconocido"}`,
+          "error",
+        );
+      }
+
+      function procesarRespuestaAuth(payload) {
+        if (payload.success && payload.authCode) {
+          authCodeActual = payload.authCode;
+          logApplyToken("authCode recibido desde el flujo inicial", { authCode: payload.authCode });
+          actualizarEstado("Autorizacion exitosa.", "success");
+          mostrarAuthCode(payload.authCode);
+          consultarOpenApiUsuario();
+          return;
+        }
+
+        actualizarEstado(
+          `Fallo de autorizacion: ${payload.error || "Error desconocido"}`,
+          "error",
+        );
+      }
+
+      function procesarRespuestaDatosUsuario(payload) {
+        if (payload.success && payload.data) {
+          pintarDatosUsuario(payload.data);
+          actualizarEstado("Datos de usuario recibidos desde mini program.", "success");
+          return;
+        }
+
+        pintarDatosUsuario(null);
+        actualizarEstado(
+          `Fallo al obtener datos de usuario: ${payload.data || payload.error || "Error desconocido"}`,
+          "error",
+        );
+      }
+
       // Procesa respuestas de appID y autorizacion para actualizar la interfaz.
       function procesarMensajeRecibido(data) {
-        const payload = data && data.data ? data.data : data;
+        const payload = extraerPayloadMensaje(data);
 
         if (!payload || typeof payload !== "object") {
           return;
         }
 
         if (payload.type === "appId") {
-          if (payload.success && payload.appId) {
-            appIdActual = payload.appId;
-            logApplyToken("AppID recibido desde el flujo inicial", { appId: payload.appId });
-            actualizarEstado("AppID obtenido correctamente.", "success");
-            mostrarAppId(payload.appId);
-          } else {
-            actualizarEstado(
-              `Fallo al obtener appID: ${payload.error || "Error desconocido"}`,
-              "error",
-            );
-          }
+          procesarRespuestaAppId(payload);
           return;
         }
 
         if (payload.type === "authResponse") {
-          if (payload.success && payload.authCode) {
-            authCodeActual = payload.authCode;
-            logApplyToken("authCode recibido desde el flujo inicial", { authCode: payload.authCode });
-            actualizarEstado("Autorizacion exitosa.", "success");
-            mostrarAuthCode(payload.authCode);
-            consultarOpenApiUsuario();
-          } else {
-            actualizarEstado(
-              `Fallo de autorizacion: ${payload.error || "Error desconocido"}`,
-              "error",
-            );
-          }
+          procesarRespuestaAuth(payload);
+          return;
+        }
+
+        if (payload.type === "getDataUser") {
+          procesarRespuestaDatosUsuario(payload);
         }
       }
 
@@ -192,6 +255,24 @@
       function mostrarAppId(appId) {
         const appIdEl = document.getElementById("appIdLabel");
         appIdEl.textContent = appId || "-";
+      }
+
+      function pintarDatosUsuario(userData) {
+        const data = userData || {};
+
+        const userIdEl = document.getElementById("userIdLabel");
+        const nameEl = document.getElementById("nameLabel");
+        const surnameEl = document.getElementById("surnameLabel");
+        const phoneNumberEl = document.getElementById("phoneNumberLabel");
+        const emailEl = document.getElementById("emailLabel");
+
+        userIdEl.textContent = data.userId || "-";
+        nameEl.textContent = data.name || "-";
+        surnameEl.textContent = data.surname || "-";
+        phoneNumberEl.textContent = data.phoneNumber || "-";
+        emailEl.textContent = data.email || "-";
+
+        renderJson("userDataRawLabel", data);
       }
 
       function renderJson(elementId, data) {
@@ -730,11 +811,30 @@
         }
       }
 
+      // Solicita al mini programa la data basica del usuario.
+      function obtenerDatosUsuario() {
+        if (userDataSolicitado) {
+          return;
+        }
+        userDataSolicitado = true;
+
+        const message = {
+          action: "getData",
+          requestId: "req_userdata_" + Date.now(),
+          timestamp: new Date().toISOString(),
+        };
+
+        if (!enviarSolicitudAlMiniPrograma(message)) {
+          actualizarEstado("No fue posible enviar la solicitud getData.", "error");
+        }
+      }
+
       // Verifica entorno Alipay y deja listo el listener para recibir authCode.
       function inicializar() {
         if (globalThis.my && typeof globalThis.my.postMessage === "function") {
           if (configurarEscuchaDeMensajes()) {
             actualizarEstado("Entorno listo para solicitar appID y authCode.", "success");
+            obtenerDatosUsuario();
             obtenerAppId();
             obtenerAuthCode();
           } else {
