@@ -7,14 +7,14 @@
     <script src="https://appx/web-view.min.js"></script>
     <style>
       :root {
-        --bg: #0b1220;
-        --card: #111a2e;
-        --card-2: #16233d;
-        --text: #e6eefc;
-        --muted: #9db0d0;
-        --ok: #1fbf75;
-        --warn: #f59e0b;
-        --bad: #f43f5e;
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --card-2: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --ok: #0f9f60;
+        --warn: #b7791f;
+        --bad: #dc2626;
       }
 
       * { box-sizing: border-box; }
@@ -24,7 +24,7 @@
         min-height: 100vh;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         color: var(--text);
-        background: radial-gradient(circle at 20% 10%, #1c2d52, var(--bg) 45%);
+        background: var(--bg);
         padding: 16px;
       }
 
@@ -33,17 +33,28 @@
         margin: 0 auto;
       }
 
+      .hidden {
+        display: none;
+      }
+
       .card {
         background: linear-gradient(180deg, var(--card), var(--card-2));
-        border: 1px solid #253a64;
+        border: 1px solid #dbe4f0;
         border-radius: 14px;
         padding: 14px;
         margin-bottom: 12px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
       }
 
       h1 {
         margin: 0 0 10px;
         font-size: 20px;
+      }
+
+      .sub-title {
+        margin: 0;
+        font-size: 13px;
+        color: var(--muted);
       }
 
       .status {
@@ -67,7 +78,8 @@
         width: 56px;
         height: 56px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #2563eb, #06b6d4);
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -94,8 +106,8 @@
       }
 
       .product {
-        background: #0f1930;
-        border: 1px solid #22365e;
+        background: #ffffff;
+        border: 1px solid #dbe4f0;
         border-radius: 12px;
         overflow: hidden;
       }
@@ -110,7 +122,7 @@
       .product-img-placeholder {
         width: 100%;
         aspect-ratio: 4/3;
-        background: linear-gradient(135deg, #1e3a5f, #0f2a4a);
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -135,7 +147,7 @@
       .product-price {
         font-size: 18px;
         font-weight: 700;
-        color: #38bdf8;
+        color: #1d4ed8;
         margin: 6px 0 8px;
       }
 
@@ -144,7 +156,7 @@
         padding: 9px 0;
         border: none;
         border-radius: 8px;
-        background: linear-gradient(90deg, #2563eb, #06b6d4);
+        background: linear-gradient(90deg, #2563eb, #1d4ed8);
         color: #fff;
         font-size: 13px;
         font-weight: 600;
@@ -155,6 +167,57 @@
       .btn-buy:active { opacity: 0.75; }
       .btn-buy:disabled { opacity: 0.4; cursor: not-allowed; }
 
+      .pay-state {
+        border: 1px solid #dbe4f0;
+        border-radius: 12px;
+        padding: 12px;
+        background: #ffffff;
+      }
+
+      .pay-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pay-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #e0e7ff;
+        color: #1e3a8a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .pay-title {
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .pay-desc {
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .pay-meta {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #334155;
+        background: #f8fafc;
+        border: 1px solid #dbe4f0;
+        border-radius: 8px;
+        padding: 8px;
+      }
+
+      .payment-card {
+        border-color: #bfdbfe;
+      }
+
       @media (max-width: 480px) {
         .catalog { grid-template-columns: 1fr; }
       }
@@ -162,13 +225,14 @@
   </head>
   <body>
     <main class="wrap">
-      <section class="card">
-        <h1>Datos Usuario (Mini Program)</h1>
+      <section id="shopHeaderCard" class="card">
+        <h1>Tienda Claro Moda</h1>
+        <p class="sub-title">Compra rapida en WebView con pago seguro.</p>
         <div id="status" class="status warn">Inicializando WebView...</div>
       </section>
 
       <!-- Perfil usuario -->
-      <section class="card">
+      <section id="profileCard" class="card">
         <div class="profile">
           <div class="avatar" id="avatar">?</div>
           <div class="profile-info">
@@ -180,8 +244,9 @@
       </section>
 
       <!-- Tienda de ropa -->
-      <section class="card">
-        <h2 style="margin:0 0 12px;font-size:16px;">🛍️ Estilo Urbano — Colección 2026</h2>
+      <section id="catalogCard" class="card">
+        <h2 style="margin:0 0 4px;font-size:16px;">Catalogo de ropa</h2>
+        <p class="sub-title" style="margin-bottom:12px;">Selecciona una prenda para iniciar el pago.</p>
         <div class="catalog">
 
           <div class="product">
@@ -226,6 +291,18 @@
 
         </div>
       </section>
+
+      <section id="paymentResultCard" class="card payment-card">
+        <h2 style="margin:0 0 12px;font-size:16px;">Estado del pago</h2>
+        <div id="payState" class="pay-state pay-pending">
+          <div class="pay-head">
+            <div id="payIcon" class="pay-icon">⏳</div>
+            <div id="payTitle" class="pay-title">Pago pendiente</div>
+          </div>
+          <div id="payDesc" class="pay-desc">Aun no se ha intentado un pago.</div>
+          <div id="payMeta" class="pay-meta">resultCode: -</div>
+        </div>
+      </section>
     </main>
 
     <script>
@@ -233,7 +310,25 @@
         received: false,
         attempts: 0,
         maxAttempts: 8,
+        paymentResolved: false,
       };
+
+      function mostrarSoloResultadoPago() {
+        const cardIds = ["shopHeaderCard", "profileCard", "catalogCard"];
+
+        for (const id of cardIds) {
+          const el = document.getElementById(id);
+          if (el) {
+            el.classList.add("hidden");
+          }
+        }
+
+        const paymentCard = document.getElementById("paymentResultCard");
+        if (paymentCard) {
+          paymentCard.classList.remove("hidden");
+          paymentCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
 
       function setStatus(text, kind) {
         const el = document.getElementById("status");
@@ -293,7 +388,7 @@
         my.tradePay({
           paymentUrl: paymentUrl,
           success: function (res) {
-            setStatus("Pago exitoso.", "ok");
+            applyPaymentResult(res, false);
             if (my.alert) {
               my.alert({
                 content: JSON.stringify(res),
@@ -301,7 +396,7 @@
             }
           },
           fail: function (res) {
-            setStatus("Pago fallido o cancelado.", "bad");
+            applyPaymentResult(res, true);
             if (my.alert) {
               my.alert({
                 content: JSON.stringify(res),
@@ -309,6 +404,97 @@
             }
           },
         });
+      }
+
+      function renderPaymentState(kind, details) {
+        const payStateEl = document.getElementById("payState");
+        const payIconEl = document.getElementById("payIcon");
+        const payTitleEl = document.getElementById("payTitle");
+        const payDescEl = document.getElementById("payDesc");
+        const payMetaEl = document.getElementById("payMeta");
+
+        const configByKind = {
+          success: {
+            cls: "pay-state pay-success",
+            icon: "✓",
+            title: "Pago exitoso",
+            desc: "Tu pago se confirmo correctamente.",
+          },
+          pending: {
+            cls: "pay-state pay-pending",
+            icon: "⏳",
+            title: "Pago pendiente",
+            desc: "El pago esta en proceso de confirmacion.",
+          },
+          failed: {
+            cls: "pay-state pay-failed",
+            icon: "✕",
+            title: "Pago fallido",
+            desc: "No se pudo completar el pago.",
+          },
+        };
+
+        const config = configByKind[kind] || configByKind.failed;
+        payStateEl.className = config.cls;
+        payIconEl.textContent = config.icon;
+        payTitleEl.textContent = config.title;
+        payDescEl.textContent = details && details.message ? details.message : config.desc;
+
+        const resultCode = details && details.resultCode ? details.resultCode : "-";
+        const startTime = details && details.startTime ? details.startTime : "-";
+        payMetaEl.textContent = "resultCode: " + resultCode + " | startTime: " + startTime;
+      }
+
+      function classifyPaymentResult(resultCode, isFailCallback) {
+        const code = String(resultCode || "");
+
+        if (code === "9000") {
+          return "success";
+        }
+
+        if (code === "8000" || code === "6004") {
+          return "pending";
+        }
+
+        if (!code && isFailCallback) {
+          return "failed";
+        }
+
+        return "failed";
+      }
+
+      function applyPaymentResult(res, isFailCallback) {
+        const kind = classifyPaymentResult(res && res.resultCode, isFailCallback);
+        let message = "Tu pago fue rechazado o cancelado.";
+
+        if (kind === "success") {
+          message = "Tu pago fue aprobado (resultCode 9000).";
+        } else if (kind === "pending") {
+          message = "Tu pago esta pendiente de confirmacion.";
+        }
+
+        renderPaymentState(kind, {
+          resultCode: res && res.resultCode,
+          startTime: res && res.startTime,
+          message,
+        });
+
+        if (!state.paymentResolved) {
+          state.paymentResolved = true;
+          mostrarSoloResultadoPago();
+        }
+
+        if (kind === "success") {
+          setStatus("Pago exitoso confirmado (9000).", "ok");
+          return;
+        }
+
+        if (kind === "pending") {
+          setStatus("Pago pendiente de confirmacion.", "warn");
+          return;
+        }
+
+        setStatus("Pago fallido o cancelado.", "bad");
       }
 
       function parseIfJsonString(value) {
