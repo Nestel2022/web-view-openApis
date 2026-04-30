@@ -87,6 +87,8 @@
       let appIdActual = "";
       let applyTokenLiveLog = [];
       let userDataSolicitado = false;
+      let userDataRecibida = false;
+      let userDataIntentos = 0;
 
       const fallbackConfig = {
         ENV: "UAT",
@@ -144,16 +146,24 @@
         }
       }
 
+      function manejarMensajeMiniPrograma(data) {
+        procesarMensajeRecibido(data);
+      }
+
       // Registra el listener que recibe respuestas desde el mini programa.
       function configurarEscuchaDeMensajes() {
-        if (globalThis.my) {
-          globalThis.my.onMessage = function (data) {
-            procesarMensajeRecibido(data);
-          };
-          return true;
-        } else {
+        if (!globalThis.my) {
           return false;
         }
+
+        // Compatibilidad con distintos bridges: onMessage(callback) y onMessage = callback.
+        if (typeof globalThis.my.onMessage === "function") {
+          globalThis.my.onMessage(manejarMensajeMiniPrograma);
+          return true;
+        }
+
+        globalThis.my.onMessage = manejarMensajeMiniPrograma;
+        return true;
       }
 
       function extraerPayloadMensaje(data) {
@@ -162,6 +172,14 @@
         }
 
         let payload = data;
+        if (payload && typeof payload === "object" && payload.data !== undefined) {
+          payload = payload.data;
+        }
+
+        if (Array.isArray(payload) && payload.length > 0) {
+          payload = payload[0];
+        }
+
         if (payload && typeof payload === "object" && payload.data !== undefined) {
           payload = payload.data;
         }
@@ -209,8 +227,11 @@
       }
 
       function procesarRespuestaDatosUsuario(payload) {
-        if (payload.success && payload.data) {
-          pintarDatosUsuario(payload.data);
+        const userData = payload?.data?.data || payload?.data || null;
+
+        if (payload.success && userData) {
+          userDataRecibida = true;
+          pintarDatosUsuario(userData);
           actualizarEstado("Datos de usuario recibidos desde mini program.", "success");
           return;
         }
@@ -220,6 +241,12 @@
           `Fallo al obtener datos de usuario: ${payload.data || payload.error || "Error desconocido"}`,
           "error",
         );
+      }
+
+      function verificarReintentoDatosUsuario() {
+        if (!userDataRecibida && userDataIntentos < 3) {
+          obtenerDatosUsuario();
+        }
       }
 
       // Procesa respuestas de appID y autorizacion para actualizar la interfaz.
@@ -813,20 +840,24 @@
 
       // Solicita al mini programa la data basica del usuario.
       function obtenerDatosUsuario() {
-        if (userDataSolicitado) {
+        if (userDataSolicitado && userDataRecibida) {
           return;
         }
         userDataSolicitado = true;
+        userDataIntentos += 1;
 
         const message = {
           action: "getData",
-          requestId: "req_userdata_" + Date.now(),
+          requestId: "req_userdata_" + userDataIntentos + "_" + Date.now(),
           timestamp: new Date().toISOString(),
         };
 
         if (!enviarSolicitudAlMiniPrograma(message)) {
           actualizarEstado("No fue posible enviar la solicitud getData.", "error");
+          return;
         }
+
+        setTimeout(verificarReintentoDatosUsuario, 1200);
       }
 
       // Verifica entorno Alipay y deja listo el listener para recibir authCode.
@@ -845,9 +876,11 @@
         }
       }
 
-      document.addEventListener("DOMContentLoaded", function () {
+      function inicializarDespuesDeCarga() {
         setTimeout(inicializar, 100);
-      });
+      }
+
+      document.addEventListener("DOMContentLoaded", inicializarDespuesDeCarga);
 
       if (document.readyState === "complete") {
         setTimeout(inicializar, 100);
