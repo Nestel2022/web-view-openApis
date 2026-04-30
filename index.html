@@ -243,6 +243,39 @@
         );
       }
 
+      function normalizarDatosUsuario(rawUserData) {
+        if (!rawUserData) {
+          return null;
+        }
+
+        let candidate = rawUserData;
+
+        if (typeof candidate === "string") {
+          try {
+            candidate = JSON.parse(candidate);
+          } catch {
+            return null;
+          }
+        }
+
+        if (candidate && typeof candidate === "object" && candidate.data && typeof candidate.data === "object") {
+          candidate = candidate.data;
+        }
+
+        if (!candidate || typeof candidate !== "object") {
+          return null;
+        }
+
+        return {
+          hasUserInfo: Boolean(candidate.hasUserInfo),
+          userId: candidate.userId || candidate.userID || candidate.id || "",
+          name: candidate.name || candidate.firstName || "",
+          surname: candidate.surname || candidate.lastName || "",
+          phoneNumber: candidate.phoneNumber || candidate.phone || "",
+          email: candidate.email || "",
+        };
+      }
+
       function verificarReintentoDatosUsuario() {
         if (!userDataRecibida && userDataIntentos < 3) {
           obtenerDatosUsuario();
@@ -285,7 +318,7 @@
       }
 
       function pintarDatosUsuario(userData) {
-        const data = userData || {};
+        const data = normalizarDatosUsuario(userData) || {};
 
         const userIdEl = document.getElementById("userIdLabel");
         const nameEl = document.getElementById("nameLabel");
