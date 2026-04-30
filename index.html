@@ -25,11 +25,11 @@
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         color: var(--text);
         background: var(--bg);
-        padding: 16px;
+        padding: 20px;
       }
 
       .wrap {
-        max-width: 760px;
+        max-width: 920px;
         margin: 0 auto;
       }
 
@@ -40,20 +40,63 @@
       .card {
         background: linear-gradient(180deg, var(--card), var(--card-2));
         border: 1px solid #dbe4f0;
-        border-radius: 14px;
-        padding: 14px;
-        margin-bottom: 12px;
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 14px;
         box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
       }
 
       h1 {
         margin: 0 0 10px;
-        font-size: 20px;
+        font-size: clamp(22px, 3vw, 30px);
+      }
+
+      .header-card {
+        border-color: #bfdbfe;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      }
+
+      .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.22);
+        flex-shrink: 0;
+      }
+
+      .brand-icon svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .brand-title {
+        margin: 0;
+        font-size: clamp(24px, 3.6vw, 34px);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-highlight {
+        background: linear-gradient(90deg, #1d4ed8, #0284c7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
       }
 
       .sub-title {
         margin: 0;
-        font-size: 13px;
+        font-size: clamp(13px, 2vw, 15px);
         color: var(--muted);
       }
 
@@ -75,15 +118,15 @@
 
       .avatar {
         flex-shrink: 0;
-        width: 56px;
-        height: 56px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
         background: linear-gradient(135deg, #2563eb, #1d4ed8);
         color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 700;
       }
 
@@ -135,7 +178,7 @@
 
       .product-name {
         font-weight: 600;
-        font-size: 14px;
+        font-size: 15px;
       }
 
       .product-ref {
@@ -145,7 +188,7 @@
       }
 
       .product-price {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 700;
         color: #1d4ed8;
         margin: 6px 0 8px;
@@ -153,12 +196,12 @@
 
       .btn-buy {
         width: 100%;
-        padding: 9px 0;
+        padding: 11px 0;
         border: none;
         border-radius: 8px;
         background: linear-gradient(90deg, #2563eb, #1d4ed8);
         color: #fff;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         cursor: pointer;
         transition: opacity 0.15s;
@@ -172,6 +215,69 @@
         border-radius: 12px;
         padding: 12px;
         background: #ffffff;
+      }
+
+      .pay-visual {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .pay-product-image {
+        width: 92px;
+        height: 92px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #dbe4f0;
+        background: #f8fafc;
+      }
+
+      .pay-product-name {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .pay-product-ref {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .pay-product-price {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1d4ed8;
+        margin-top: 4px;
+      }
+
+      .pay-badge {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        margin-bottom: 6px;
+        border: 1px solid transparent;
+      }
+
+      .pay-badge.success {
+        color: #166534;
+        background: #dcfce7;
+        border-color: #86efac;
+      }
+
+      .pay-badge.pending {
+        color: #92400e;
+        background: #fef3c7;
+        border-color: #fcd34d;
+      }
+
+      .pay-badge.failed {
+        color: #991b1b;
+        background: #fee2e2;
+        border-color: #fca5a5;
       }
 
       .pay-head {
@@ -220,17 +326,63 @@
 
       .btn-secondary:active { opacity: 0.8; }
 
-      @media (max-width: 480px) {
+      @media (max-width: 768px) {
+        body { padding: 14px; }
+        .card { padding: 14px; border-radius: 14px; }
         .catalog { grid-template-columns: 1fr; }
+        .brand-icon {
+          width: 46px;
+          height: 46px;
+          border-radius: 12px;
+        }
+        .brand-icon svg {
+          width: 24px;
+          height: 24px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body { padding: 10px; }
+        .card { padding: 12px; margin-bottom: 10px; }
+        .catalog { grid-template-columns: 1fr; }
+        .pay-visual { grid-template-columns: 1fr; }
+        .pay-product-image { width: 100%; height: 180px; }
+        .brand-row { gap: 10px; }
+        .brand-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+        }
+        .brand-icon svg {
+          width: 20px;
+          height: 20px;
+        }
+        .avatar {
+          width: 50px;
+          height: 50px;
+          font-size: 20px;
+        }
+        .btn-buy,
+        .btn-secondary {
+          font-size: 13px;
+          padding: 10px 0;
+        }
       }
     </style>
   </head>
   <body>
     <main class="wrap">
-      <section id="shopHeaderCard" class="card">
-        <h1>Tienda Claro Moda</h1>
+      <section id="shopHeaderCard" class="card header-card">
+        <div class="brand-row">
+          <div class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 9V7a4 4 0 1 1 8 0v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M6 9h12l-1 10a2 2 0 0 1-2 1H9a2 2 0 0 1-2-1L6 9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h1 class="brand-title">Tienda <span class="brand-highlight">Claro Moda</span></h1>
+        </div>
         <p class="sub-title">Compra rapida en WebView con pago seguro.</p>
-        <div id="status" class="status warn">Inicializando WebView...</div>
       </section>
 
       <!-- Perfil usuario -->
@@ -317,6 +469,15 @@
       <section id="paymentResultCard" class="card payment-card hidden">
         <h2 style="margin:0 0 12px;font-size:16px;">Estado del pago</h2>
         <div id="payState" class="pay-state pay-pending">
+          <div class="pay-visual">
+            <img id="payProductImage" class="pay-product-image" src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80" alt="Producto comprado" />
+            <div>
+              <div id="payBadge" class="pay-badge pending">Pendiente</div>
+              <div id="payProductName" class="pay-product-name">Producto seleccionado</div>
+              <div id="payProductRef" class="pay-product-ref">Referencia: -</div>
+              <div id="payProductPrice" class="pay-product-price">$0</div>
+            </div>
+          </div>
           <div class="pay-head">
             <div id="payTitle" class="pay-title">Pago pendiente</div>
           </div>
@@ -333,7 +494,28 @@
         attempts: 0,
         maxAttempts: 8,
         paymentResolved: false,
+        lastPurchase: {
+          name: "Producto seleccionado",
+          ref: "-",
+          price: 0,
+          image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80",
+        },
       };
+
+      const productImageByRef = {
+        "REF-001": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+        "REF-002": "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80",
+        "REF-003": "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80",
+        "REF-004": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+      };
+
+      function formatCurrency(value) {
+        return "$" + Number(value || 0).toLocaleString("es-CO");
+      }
+
+      function getProductImage(ref) {
+        return productImageByRef[ref] || productImageByRef["REF-001"];
+      }
 
       function mostrarSoloResultadoPago() {
         const cardIds = ["shopHeaderCard", "profileCard", "catalogCard"];
@@ -377,6 +559,12 @@
         }
 
         state.paymentResolved = false;
+        state.lastPurchase = {
+          name: "Producto seleccionado",
+          ref: "-",
+          price: 0,
+          image: getProductImage("REF-001"),
+        };
         renderPaymentState("pending", {
           resultCode: "-",
           startTime: "-",
@@ -387,6 +575,9 @@
 
       function setStatus(text, kind) {
         const el = document.getElementById("status");
+        if (!el) {
+          return;
+        }
         el.textContent = text;
         el.className = "status " + (kind || "warn");
       }
@@ -412,6 +603,13 @@
           setStatus("No se puede enviar: mini program no disponible.", "bad");
           return;
         }
+
+        state.lastPurchase = {
+          name: productName,
+          ref,
+          price,
+          image: getProductImage(ref),
+        };
 
         const payload = {
           action: "getPay",
@@ -461,29 +659,48 @@
         const payTitleEl = document.getElementById("payTitle");
         const payDescEl = document.getElementById("payDesc");
         const payMetaEl = document.getElementById("payMeta");
+        const payBadgeEl = document.getElementById("payBadge");
+        const payProductNameEl = document.getElementById("payProductName");
+        const payProductRefEl = document.getElementById("payProductRef");
+        const payProductPriceEl = document.getElementById("payProductPrice");
+        const payProductImageEl = document.getElementById("payProductImage");
 
         const configByKind = {
           success: {
             cls: "pay-state pay-success",
             title: "Pago exitoso",
             desc: "Tu pago se confirmo correctamente.",
+            badgeText: "Aprobado",
+            badgeClass: "success",
           },
           pending: {
             cls: "pay-state pay-pending",
             title: "Pago pendiente",
             desc: "El pago esta en proceso de confirmacion.",
+            badgeText: "Pendiente",
+            badgeClass: "pending",
           },
           failed: {
             cls: "pay-state pay-failed",
             title: "Pago fallido",
             desc: "No se pudo completar el pago.",
+            badgeText: "Rechazado",
+            badgeClass: "failed",
           },
         };
 
         const config = configByKind[kind] || configByKind.failed;
         payStateEl.className = config.cls;
+        payBadgeEl.textContent = config.badgeText;
+        payBadgeEl.className = "pay-badge " + config.badgeClass;
         payTitleEl.textContent = config.title;
         payDescEl.textContent = details && details.message ? details.message : config.desc;
+
+        payProductNameEl.textContent = state.lastPurchase.name;
+        payProductRefEl.textContent = "Referencia: " + state.lastPurchase.ref;
+        payProductPriceEl.textContent = formatCurrency(state.lastPurchase.price);
+        payProductImageEl.src = state.lastPurchase.image;
+        payProductImageEl.alt = state.lastPurchase.name;
 
         const resultCode = details && details.resultCode ? details.resultCode : "-";
         const startTime = details && details.startTime ? details.startTime : "-";
@@ -709,7 +926,6 @@
         renderUser({});
 
         if (!registerOnMessage()) {
-          setStatus("No se detecta objeto my. Abre esta web desde el web-view del mini program.", "bad");
           return;
         }
 
