@@ -264,8 +264,9 @@
         }
 
         const payload = {
-          action: "purchase",
+          action: "getPay",
           product: { name: productName, ref: ref, price: price },
+          totalValue: price,
           user: {
             name: currentUser.name || "",
             surname: currentUser.surname || "",
@@ -277,10 +278,37 @@
 
         try {
           globalThis.my.postMessage({ data: payload });
-          setStatus("Compra enviada al mini program: " + productName + " — $" + price.toLocaleString("es-CO"), "ok");
+          setStatus("Solicitando URL de pago: " + productName + " — $" + price.toLocaleString("es-CO"), "warn");
         } catch (error) {
           setStatus("Fallo al enviar compra: " + (error && error.message ? error.message : String(error)), "bad");
         }
+      }
+
+      function makePay(paymentUrl) {
+        if (!globalThis.my || typeof globalThis.my.tradePay !== "function") {
+          setStatus("tradePay no disponible en este entorno.", "bad");
+          return;
+        }
+
+        my.tradePay({
+          paymentUrl: paymentUrl,
+          success: function (res) {
+            setStatus("Pago exitoso.", "ok");
+            if (my.alert) {
+              my.alert({
+                content: JSON.stringify(res),
+              });
+            }
+          },
+          fail: function (res) {
+            setStatus("Pago fallido o cancelado.", "bad");
+            if (my.alert) {
+              my.alert({
+                content: JSON.stringify(res),
+              });
+            }
+          },
+        });
       }
 
       function parseIfJsonString(value) {
@@ -347,7 +375,42 @@
         return null;
       }
 
+      function normalizePaymentUrl(anyPayload) {
+        const payload = unwrapPayload(anyPayload);
+
+        if (!payload || typeof payload !== "object") {
+          return null;
+        }
+
+        if (payload.type !== "getPay") {
+          return null;
+        }
+
+        if (payload.success !== true) {
+          return { error: payload.error || payload.data || "No fue posible obtener URL de pago" };
+        }
+
+        const paymentUrl = typeof payload.data === "string" ? payload.data : unwrapPayload(payload.data);
+        if (typeof paymentUrl !== "string" || !paymentUrl) {
+          return { error: "La respuesta getPay no trae paymentUrl valido" };
+        }
+
+        return { paymentUrl };
+      }
+
       function handleIncoming(raw) {
+        const payResult = normalizePaymentUrl(raw);
+        if (payResult) {
+          if (payResult.error) {
+            setStatus("Error getPay: " + payResult.error, "bad");
+            return;
+          }
+
+          setStatus("URL de pago recibida. Abriendo tradePay...", "warn");
+          makePay(payResult.paymentUrl);
+          return;
+        }
+
         const result = normalizeUserData(raw);
         if (!result) {
           return;
