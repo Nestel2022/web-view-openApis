@@ -387,12 +387,12 @@
         }
 
         if (payload.success !== true) {
-          return { error: payload.error || payload.data || "No fue posible obtener URL de pago" };
+          return { error: payload.error || payload.payUrl || "No fue posible obtener URL de pago" };
         }
 
-        const paymentUrl = typeof payload.data === "string" ? payload.data : unwrapPayload(payload.data);
+        const paymentUrl = typeof payload.payUrl === "string" ? payload.payUrl : unwrapPayload(payload.payUrl);
         if (typeof paymentUrl !== "string" || !paymentUrl) {
-          return { error: "La respuesta getPay no trae paymentUrl valido" };
+          return { error: "La respuesta getPay no trae payUrl valido" };
         }
 
         return { paymentUrl };
