@@ -1,922 +1,310 @@
+@'
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Demo WebView y Minprogram</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.9.0/jsrsasign-all-min.js"></script>
+    <title>User Data WebView</title>
     <script src="https://appx/web-view.min.js"></script>
-    <script src="./config.js"></script>
-    <script src="./signature.js"></script>
-    <script src="./openApis.js"></script>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --card: #111a2e;
+        --card-2: #16233d;
+        --text: #e6eefc;
+        --muted: #9db0d0;
+        --ok: #1fbf75;
+        --warn: #f59e0b;
+        --bad: #f43f5e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at 20% 10%, #1c2d52, var(--bg) 45%);
+        padding: 16px;
+      }
+
+      .wrap {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: linear-gradient(180deg, var(--card), var(--card-2));
+        border: 1px solid #253a64;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 20px;
+      }
+
+      .status {
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .ok { color: var(--ok); }
+      .warn { color: var(--warn); }
+      .bad { color: var(--bad); }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .item {
+        background: #0f1930;
+        border: 1px solid #22365e;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 3px;
+      }
+
+      .value {
+        word-break: break-word;
+        font-weight: 600;
+      }
+
+      .full { grid-column: 1 / -1; }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 240px;
+        overflow: auto;
+      }
+
+      @media (max-width: 640px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+    </style>
   </head>
-  <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
-    <div class="relative isolate overflow-hidden min-h-screen">
-      <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_#334155_0%,_#0f172a_45%,_#020617_100%)]"></div>
-      <div class="absolute -top-28 -left-24 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl"></div>
-      <div class="absolute -bottom-32 -right-20 h-80 w-80 rounded-full bg-blue-600/20 blur-3xl"></div>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <h1>Datos Usuario (Mini Program)</h1>
+        <div id="status" class="status warn">Inicializando WebView...</div>
+      </section>
 
-      <main class="mx-auto flex min-h-screen max-w-3xl items-center p-4 sm:p-8">
-        <section class="w-full rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-blue-950/50 backdrop-blur-xl sm:p-10">
-          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">Alipay WebView</p>
-          <h2 class="mt-3 text-3xl font-bold leading-tight text-white sm:text-4xl">Demo WebView y Minprogram</h2>
-          <p class="mt-3 text-sm text-slate-300">Flujo simplificado para solicitar authCode y consumir OpenAPIs en la vista.</p>
+      <section class="card">
+        <div class="grid">
+          <div class="item"><div class="label">hasUserInfo</div><div id="hasUserInfo" class="value">-</div></div>
+          <div class="item"><div class="label">userId</div><div id="userId" class="value">-</div></div>
+          <div class="item"><div class="label">name</div><div id="name" class="value">-</div></div>
+          <div class="item"><div class="label">surname</div><div id="surname" class="value">-</div></div>
+          <div class="item"><div class="label">phoneNumber</div><div id="phoneNumber" class="value">-</div></div>
+          <div class="item full"><div class="label">email</div><div id="email" class="value">-</div></div>
+        </div>
+      </section>
 
-          <div class="mt-6 rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3 text-sm font-medium text-cyan-100" id="status">
-            Inicializando entorno de comunicacion...
-          </div>
-
-          <div class="mt-6 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-            <p class="text-xs uppercase tracking-widest text-slate-400">AppID</p>
-            <p class="mt-2 break-all text-lg font-semibold text-cyan-300" id="appIdLabel">-</p>
-          </div>
-
-          <div class="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-            <p class="text-xs uppercase tracking-widest text-slate-400">AuthCode</p>
-            <p class="mt-2 break-all text-lg font-semibold text-emerald-300" id="authCodeLabel">-</p>
-          </div>
-
-          <div class="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-            <p class="text-xs uppercase tracking-widest text-slate-400">Datos de Usuario (Mini Program)</p>
-            <div class="mt-3 grid gap-2 text-sm text-slate-200 sm:grid-cols-2">
-              <p><span class="text-slate-400">userId:</span> <span id="userIdLabel">-</span></p>
-              <p><span class="text-slate-400">name:</span> <span id="nameLabel">-</span></p>
-              <p><span class="text-slate-400">surname:</span> <span id="surnameLabel">-</span></p>
-              <p><span class="text-slate-400">phoneNumber:</span> <span id="phoneNumberLabel">-</span></p>
-              <p class="sm:col-span-2 break-all"><span class="text-slate-400">email:</span> <span id="emailLabel">-</span></p>
-            </div>
-            <pre class="mt-3 max-h-48 overflow-auto whitespace-pre-wrap break-all text-xs text-cyan-200" id="userDataRawLabel">-</pre>
-          </div>
-
-          <div class="mt-4 grid gap-4 lg:grid-cols-2">
-            <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <p class="text-xs uppercase tracking-widest text-slate-400">ApplyToken Curl</p>
-              <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-sky-200" id="applyTokenRequestLabel">-</pre>
-            </div>
-
-            <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <p class="text-xs uppercase tracking-widest text-slate-400">ApplyToken Response</p>
-              <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-emerald-200" id="applyTokenResponseLabel">-</pre>
-            </div>
-
-            <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <p class="text-xs uppercase tracking-widest text-slate-400">InquiryUserInfo Curl</p>
-              <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-amber-200" id="inquiryRequestLabel">-</pre>
-            </div>
-
-            <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-              <p class="text-xs uppercase tracking-widest text-slate-400">InquiryUserInfo Response</p>
-              <pre class="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs text-fuchsia-200" id="inquiryResponseLabel">-</pre>
-            </div>
-          </div>
-
-          <div class="mt-4 rounded-2xl border border-rose-300/20 bg-rose-500/5 p-4">
-            <p class="text-xs uppercase tracking-widest text-slate-400">Live Log ApplyToken</p>
-            <pre class="mt-2 max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs text-rose-100" id="applyTokenLiveLogLabel">-</pre>
-          </div>
-        </section>
-      </main>
-    </div>
+      <section class="card">
+        <div class="label">Payload Recibido</div>
+        <pre id="raw">-</pre>
+      </section>
+    </main>
 
     <script>
-      let authCodeSolicitado = false;
-      let appIdSolicitado = false;
-      let openApiSolicitado = false;
-      let authCodeActual = "";
-      let appIdActual = "";
-      let applyTokenLiveLog = [];
-      let userDataSolicitado = false;
-      let userDataRecibida = false;
-      let userDataIntentos = 0;
-
-      const fallbackConfig = {
-        ENV: "UAT",
-        userInfo: "https://superapp-api-test.miniprogramas.claro.com.co/",
-        GWPConfig: {
-          UAT: {
-            clientId: "2025070414560001",
-            merchantId: "143",
-            privateKey:
-              "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC5DA0RcwWhtyr+6/PKRNs40Wc64zlBxBFHScY2pvRit9f6wDpG3O5vi3tzSeSYvclSGPvs8pCop/9s57fGxiZyZ39bV0l6/UQc2IVAOcIbuOYyj+VFnKabtpwTlX7cci/qqzMAFbvHZ44/EvNp0kYYPXpMY2U6g/B55ZyP4k5O86qYU9zw7KnLau6ZyMHQvNNadPTYU4QTwZJkbaJrGJgDGRWtGOQGEfGjYWdMayFP8XCezedWr2bLTSVNbPL0qzCH1W9QkIX+EUi7EVSz4CvKoqD/n0HC/ZBYaLSmfBxAwPKJJ+aJFjtdZzq+Mj24v3aCw4gn6HPqi0Yfmju15Fb3AgMBAAECggEAM3jQK8HgV6bBDW6pfeJgTjIlMkKhGxOEMN2rBmmzQcBckdGlhC+RHTLhsGRl8zybQrxTWwnvxhIQ4QSlYGOeryTtzoT9mfnX1+Q8UGygeyCX24meHxpfV6HYUTQ8uOoEPRTI12W0OVerQA0v6wgD2ltDaPse3cN0gRumzHkJCjmQuoirMqwuNIM5IoiENlB4Mn5xaCCzw9EACnFR+DoKGD0gG434BiACc6BMawg2vo0TEaW6Z6f99sXSNpTAWDPPqPpysrQApWmwR2F5MaQwd0Jqrm4YQCKXGr1Swuzbrx5vU2lp7rz/JugsAD1sLD7KNh/KFpzkuzVQNLq373RbyQKBgQDmeySOJIRz1Grd69DhRlvcF3nIQln8U3AfMLodEM/ObeuBO8tuM7hjDWqrFuEtIL7MPGcAXhQSTrOupo+kmbg/4Sdm0uMvDIAxDgJk2ytAo0L4CzApxQNMNzlH4RAzQbmsClXSCbPHrmirO1BHeUWvYlxR2jch2APMPV0PTS/THwKBgQDNiRumsJw+EnLaGqyhXqVSIrGlQDRbz1VnuPOr3Yu0pcC/V4oP/H4wAMz9wg2R0LQwTrPGGQF8QqHcix2cXaEJAUG60OaxrYB4Pi8YP0I0lhWsouNujQ06YtTBUInc2WQbyQV5Jl94ISzDkEKGI5KLKArq26CTiH+MyQaHeDKZKQKBgFGy7wdP3H+umV8nGzjvltpSnAGnu3wdG46C2EY7Ul5LSoLZ7keXH9JEzD3vc0xq4hdFhgF0V8sRiNHtCtf/AXfrWOsy8AMafEpnO+QCaLeV58RDOwRjaMLYhH59Qh/ZOXbJhxhYBhlPMp0X/mIHk/MSe8UsBAUELHx2eAlXhA9jAoGAdE1NFDmDb6xIyRmm7Xj820k+dF+sQPdFQHfriijG0OWp95u1R+58CPWrCTwxKX2LOHqQR1wG9yVNKdqeWsiwQsQvSWLD525h76hgRbwl3lO+1/0j7H5sKcma0ficyhdJCl/pdPA9vWAoUFDlE7o1RgDWjKbSaikm46csxqNBHmECgYByrpnNY7rFEhQFXIWI72Iw2cjiAWXMcb/2HFY+U0a4+5Z9M3JYBdvVbzmIAWuEolvz1oAN2I4nd5nYJdrTfp8fzLDXPLeOmtyRgiCcIjXorLyQpSCX3RvB21EvoY2kXEku30zlkGF1+6jLiHqF2UgEOBDazVQfKSd3mV2xaJd5nA==",
-          },
-        },
+      const state = {
+        received: false,
+        attempts: 0,
+        maxAttempts: 8,
       };
 
-      const openApiDebug = {
-        applyTokenRequest: null,
-        applyTokenResponse: null,
-        inquiryRequest: null,
-        inquiryResponse: null,
-      };
-
-      // Muestra mensajes de estado al usuario en la parte superior de la pantalla.
-      function actualizarEstado(message, type = "info") {
-        const statusEl = document.getElementById("status");
-        statusEl.innerHTML = message;
-
-        const baseClass =
-          "mt-6 rounded-2xl px-4 py-3 text-sm font-medium border";
-        const variants = {
-          success: "border-emerald-300/30 bg-emerald-400/10 text-emerald-100",
-          error: "border-rose-300/30 bg-rose-500/10 text-rose-100",
-          info: "border-cyan-300/20 bg-cyan-400/10 text-cyan-100",
-        };
-
-        statusEl.className = `${baseClass} ${variants[type] || variants.info}`;
+      function setStatus(text, kind) {
+        const el = document.getElementById("status");
+        el.textContent = text;
+        el.className = "status " + (kind || "warn");
       }
 
-      // Envia una solicitud al mini programa de Alipay usando postMessage.
-      function enviarSolicitudAlMiniPrograma(data) {
-        if (globalThis.my && typeof globalThis.my.postMessage === "function") {
-          try {
-            const messageData = { data };
-            globalThis.my.postMessage(messageData);
-            return true;
-          } catch (error) {
-            console.error("No fue posible enviar postMessage al mini programa", error);
-            return false;
+      function setValue(id, value) {
+        const el = document.getElementById(id);
+        el.textContent = value === undefined || value === null || value === "" ? "-" : String(value);
+      }
+
+      function renderUser(user) {
+        setValue("hasUserInfo", user.hasUserInfo);
+        setValue("userId", user.userId);
+        setValue("name", user.name);
+        setValue("surname", user.surname);
+        setValue("phoneNumber", user.phoneNumber);
+        setValue("email", user.email);
+      }
+
+      function setRaw(payload) {
+        const el = document.getElementById("raw");
+        try {
+          el.textContent = JSON.stringify(payload, null, 2);
+        } catch {
+          el.textContent = String(payload);
+        }
+      }
+
+      function parseIfJsonString(value) {
+        if (typeof value !== "string") {
+          return value;
+        }
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+
+      function unwrapPayload(input) {
+        let value = input;
+
+        for (let i = 0; i < 6; i += 1) {
+          value = parseIfJsonString(value);
+
+          if (Array.isArray(value) && value.length > 0) {
+            value = value[0];
+            continue;
           }
-        } else {
-          actualizarEstado(
-            "Entorno de comunicacion no disponible. Abra esta pagina en WebView del mini programa.",
-            "error",
-          );
-          return false;
-        }
-      }
 
-      function manejarMensajeMiniPrograma(data) {
-        procesarMensajeRecibido(data);
-      }
-
-      // Registra el listener que recibe respuestas desde el mini programa.
-      function configurarEscuchaDeMensajes() {
-        if (!globalThis.my) {
-          return false;
-        }
-
-        // Compatibilidad con distintos bridges: onMessage(callback) y onMessage = callback.
-        if (typeof globalThis.my.onMessage === "function") {
-          globalThis.my.onMessage(manejarMensajeMiniPrograma);
-          return true;
-        }
-
-        globalThis.my.onMessage = manejarMensajeMiniPrograma;
-        return true;
-      }
-
-      function extraerPayloadMensaje(data) {
-        if (!data) {
-          return null;
-        }
-
-        let payload = data;
-        if (payload && typeof payload === "object" && payload.data !== undefined) {
-          payload = payload.data;
-        }
-
-        if (Array.isArray(payload) && payload.length > 0) {
-          payload = payload[0];
-        }
-
-        if (payload && typeof payload === "object" && payload.data !== undefined) {
-          payload = payload.data;
-        }
-
-        if (typeof payload === "string") {
-          try {
-            return JSON.parse(payload);
-          } catch {
-            return null;
+          if (value && typeof value === "object" && "detail" in value) {
+            value = value.detail;
+            continue;
           }
-        }
 
-        return payload && typeof payload === "object" ? payload : null;
-      }
-
-      function procesarRespuestaAppId(payload) {
-        if (payload.success && payload.appId) {
-          appIdActual = payload.appId;
-          logApplyToken("AppID recibido desde el flujo inicial", { appId: payload.appId });
-          actualizarEstado("AppID obtenido correctamente.", "success");
-          mostrarAppId(payload.appId);
-          return;
-        }
-
-        actualizarEstado(
-          `Fallo al obtener appID: ${payload.error || "Error desconocido"}`,
-          "error",
-        );
-      }
-
-      function procesarRespuestaAuth(payload) {
-        if (payload.success && payload.authCode) {
-          authCodeActual = payload.authCode;
-          logApplyToken("authCode recibido desde el flujo inicial", { authCode: payload.authCode });
-          actualizarEstado("Autorizacion exitosa.", "success");
-          mostrarAuthCode(payload.authCode);
-          consultarOpenApiUsuario();
-          return;
-        }
-
-        actualizarEstado(
-          `Fallo de autorizacion: ${payload.error || "Error desconocido"}`,
-          "error",
-        );
-      }
-
-      function procesarRespuestaDatosUsuario(payload) {
-        const userData = payload?.data?.data || payload?.data || null;
-
-        if (payload.success && userData) {
-          userDataRecibida = true;
-          pintarDatosUsuario(userData);
-          actualizarEstado("Datos de usuario recibidos desde mini program.", "success");
-          return;
-        }
-
-        pintarDatosUsuario(null);
-        actualizarEstado(
-          `Fallo al obtener datos de usuario: ${payload.data || payload.error || "Error desconocido"}`,
-          "error",
-        );
-      }
-
-      function normalizarDatosUsuario(rawUserData) {
-        if (!rawUserData) {
-          return null;
-        }
-
-        let candidate = rawUserData;
-
-        if (typeof candidate === "string") {
-          try {
-            candidate = JSON.parse(candidate);
-          } catch {
-            return null;
+          if (value && typeof value === "object" && "data" in value) {
+            value = value.data;
+            continue;
           }
+
+          break;
         }
 
-        if (candidate && typeof candidate === "object" && candidate.data && typeof candidate.data === "object") {
-          candidate = candidate.data;
-        }
-
-        if (!candidate || typeof candidate !== "object") {
-          return null;
-        }
-
-        return {
-          hasUserInfo: Boolean(candidate.hasUserInfo),
-          userId: candidate.userId || candidate.userID || candidate.id || "",
-          name: candidate.name || candidate.firstName || "",
-          surname: candidate.surname || candidate.lastName || "",
-          phoneNumber: candidate.phoneNumber || candidate.phone || "",
-          email: candidate.email || "",
-        };
+        value = parseIfJsonString(value);
+        return value;
       }
 
-      function verificarReintentoDatosUsuario() {
-        if (!userDataRecibida && userDataIntentos < 3) {
-          obtenerDatosUsuario();
-        }
-      }
-
-      // Procesa respuestas de appID y autorizacion para actualizar la interfaz.
-      function procesarMensajeRecibido(data) {
-        const payload = extraerPayloadMensaje(data);
+      function normalizeUserData(anyPayload) {
+        const payload = unwrapPayload(anyPayload);
 
         if (!payload || typeof payload !== "object") {
-          return;
-        }
-
-        if (payload.type === "appId") {
-          procesarRespuestaAppId(payload);
-          return;
-        }
-
-        if (payload.type === "authResponse") {
-          procesarRespuestaAuth(payload);
-          return;
+          return null;
         }
 
         if (payload.type === "getDataUser") {
-          procesarRespuestaDatosUsuario(payload);
+          if (payload.success !== true) {
+            return { error: payload.error || payload.data || "Respuesta getDataUser sin exito" };
+          }
+          const nested = unwrapPayload(payload.data);
+          if (!nested || typeof nested !== "object") {
+            return { error: "Respuesta getDataUser no contiene objeto data valido" };
+          }
+          return nested;
         }
+
+        if ("userId" in payload || "email" in payload || "phoneNumber" in payload) {
+          return payload;
+        }
+
+        return null;
       }
 
-      // Imprime el authCode en la etiqueta visible de la interfaz.
-      function mostrarAuthCode(authCode) {
-        const authCodeEl = document.getElementById("authCodeLabel");
-        authCodeEl.textContent = authCode || "-";
-      }
+      function handleIncoming(raw) {
+        const parsed = unwrapPayload(raw);
+        setRaw(parsed);
 
-      // Imprime el appID en la etiqueta visible de la interfaz.
-      function mostrarAppId(appId) {
-        const appIdEl = document.getElementById("appIdLabel");
-        appIdEl.textContent = appId || "-";
-      }
-
-      function pintarDatosUsuario(userData) {
-        const data = normalizarDatosUsuario(userData) || {};
-
-        const userIdEl = document.getElementById("userIdLabel");
-        const nameEl = document.getElementById("nameLabel");
-        const surnameEl = document.getElementById("surnameLabel");
-        const phoneNumberEl = document.getElementById("phoneNumberLabel");
-        const emailEl = document.getElementById("emailLabel");
-
-        userIdEl.textContent = data.userId || "-";
-        nameEl.textContent = data.name || "-";
-        surnameEl.textContent = data.surname || "-";
-        phoneNumberEl.textContent = data.phoneNumber || "-";
-        emailEl.textContent = data.email || "-";
-
-        renderJson("userDataRawLabel", data);
-      }
-
-      function renderJson(elementId, data) {
-        const responseEl = document.getElementById(elementId);
-        if (typeof data === "string") {
-          responseEl.textContent = data;
+        const result = normalizeUserData(raw);
+        if (!result) {
           return;
         }
 
-        try {
-          responseEl.textContent = JSON.stringify(data, null, 2);
-        } catch (error) {
-          console.warn("No fue posible serializar datos de depuracion", error);
-          responseEl.textContent = String(data || "-");
-        }
-      }
-
-      function actualizarPanelesOpenApi() {
-        renderJson("applyTokenRequestLabel", openApiDebug.applyTokenRequest || "-");
-        renderJson("applyTokenResponseLabel", openApiDebug.applyTokenResponse || "-");
-        renderJson("inquiryRequestLabel", openApiDebug.inquiryRequest || "-");
-        renderJson("inquiryResponseLabel", openApiDebug.inquiryResponse || "-");
-        renderJson("applyTokenLiveLogLabel", applyTokenLiveLog.length ? applyTokenLiveLog.join("\n") : "-");
-      }
-
-      function logApplyToken(message, data) {
-        const timestamp = new Date().toISOString();
-        let line = `[${timestamp}] ${message}`;
-
-        if (data !== undefined) {
-          try {
-            line += ` | ${JSON.stringify(data)}`;
-          } catch {
-            line += ` | ${String(data)}`;
-          }
+        if (result.error) {
+          setStatus("Mini program respondio error: " + result.error, "bad");
+          return;
         }
 
-        applyTokenLiveLog.push(line);
-        if (applyTokenLiveLog.length > 120) {
-          applyTokenLiveLog = applyTokenLiveLog.slice(-120);
-        }
-
-        actualizarPanelesOpenApi();
+        state.received = true;
+        renderUser(result);
+        setStatus("Datos recibidos y pintados correctamente.", "ok");
       }
 
-      function getRuntimeConfig() {
-        if (globalThis.AppConfig && typeof globalThis.AppConfig.getGWPConfig === "function") {
-          return globalThis.AppConfig;
-        }
-
-        return {
-          ...fallbackConfig,
-          getGWPConfig(env) {
-            return fallbackConfig.GWPConfig[env] || fallbackConfig.GWPConfig.UAT;
-          },
-        };
-      }
-
-      function ensureSigningSupport() {
-        if (!globalThis.KEYUTIL || !globalThis.KJUR || !globalThis.hextob64) {
-          throw new Error("jsrsasign no esta disponible en la vista.");
-        }
-      }
-
-      function ensurePEM(privateKey) {
-        if (!privateKey) {
-          throw new Error("No hay clave privada disponible para firmar.");
-        }
-
-        if (privateKey.includes("BEGIN PRIVATE KEY")) {
-          return privateKey;
-        }
-
-        return `-----BEGIN PRIVATE KEY-----${privateKey}-----END PRIVATE KEY-----`;
-      }
-
-      function signContentInline(content, privateKeyPem) {
-        ensureSigningSupport();
-
-        const privateKey = globalThis.KEYUTIL.getKey(privateKeyPem);
-        const sig = new globalThis.KJUR.crypto.Signature({ alg: "SHA256withRSA" });
-        sig.init(privateKey);
-        sig.updateString(content);
-
-        return globalThis.hextob64(sig.sign());
-      }
-
-      function signGeneratorInline(data) {
-        const config = getRuntimeConfig();
-        const envConfig = config.getGWPConfig(config.ENV);
-        const requestMap = data.reqMap || {};
-        const content = `${data.HTTP_METHOD} ${data.URL}\n${data.CLIENT_ID || envConfig.clientId}.${data.MERCHANT_ID || envConfig.merchantId}.${data.REQUEST_TIME}.${JSON.stringify(requestMap)}`;
-        const signed = signContentInline(content, ensurePEM(data.PRIVATE_KEY || envConfig.privateKey));
-        return `algorithm=RSA256, keyVersion=0, signature=${signed}`;
-      }
-
-      function getMyApi() {
+      function registerOnMessage() {
         if (!globalThis.my) {
-          throw new Error("No se detecto el objeto my del mini programa.");
+          return false;
         }
 
-        return globalThis.my;
-      }
-
-      function escapeShellValueInline(value) {
-        const singleQuoteEscape = "'\"'\"'";
-        return String(value).replaceAll("'", singleQuoteEscape);
-      }
-
-      function buildCurlCommandInline(requestConfig) {
-        const method = requestConfig.method || "GET";
-        const headers = requestConfig.headers || {};
-        const headerFlags = Object.entries(headers)
-          .map(([key, value]) => {
-            const headerValue = key + ": " + value;
-            return "-H '" + escapeShellValueInline(headerValue) + "'";
-          })
-          .join(" ");
-        const bodyFlag = requestConfig.data === undefined
-          ? ""
-          : " --data-raw '" + escapeShellValueInline(JSON.stringify(requestConfig.data)) + "'";
-        const urlValue = escapeShellValueInline(requestConfig.url);
-        const headerSegment = headerFlags ? " " + headerFlags : "";
-
-        return "curl -X " + method + " '" + urlValue + "'" + headerSegment + bodyFlag;
-      }
-
-      function buildFetchFailureDetails(requestConfig, error) {
-        let targetOrigin = "unknown";
-        try {
-          targetOrigin = new URL(requestConfig.url).origin;
-        } catch {
-          targetOrigin = "invalid-url";
+        if (typeof globalThis.my.onMessage === "function") {
+          globalThis.my.onMessage(handleIncoming);
+          return true;
         }
 
-        const currentOrigin = globalThis.location?.origin || "unknown";
-        const sameOrigin = currentOrigin === targetOrigin;
-        const online = globalThis.navigator?.onLine;
-        let probableCause = "Error de red o CORS";
-
-        if (!online) {
-          probableCause = "Sin conectividad de red en el dispositivo";
-        } else if (!sameOrigin) {
-          probableCause = "CORS, bloqueo por politica del navegador/WebView o dominio no permitido";
-        }
-
-        return {
-          stage: "fetch",
-          error: error?.message || String(error),
-          name: error?.name || "Error",
-          currentOrigin,
-          targetOrigin,
-          sameOrigin,
-          online,
-          url: requestConfig.url,
-          method: requestConfig.method || "GET",
-          probableCause,
-        };
+        globalThis.my.onMessage = handleIncoming;
+        return true;
       }
 
-      function parseResponsePayload(rawBody) {
-        if (typeof rawBody !== "string") {
-          return rawBody;
-        }
-
-        if (!rawBody) {
-          return rawBody;
-        }
-
-        try {
-          return JSON.parse(rawBody);
-        } catch {
-          return rawBody;
-        }
-      }
-
-      function executeMyRequestInline(requestConfig) {
-        const myApi = getMyApi();
-        const hasBody = requestConfig.data !== undefined;
-        const headers = hasBody ? { "Content-Type": "application/json" } : {};
-        Object.assign(headers, requestConfig.headers ?? {});
-
-        return new Promise((resolve, reject) => {
-          myApi.request({
-            url: requestConfig.url,
-            method: requestConfig.method || "GET",
-            headers,
-            data: requestConfig.data,
-            success(response) {
-              const rawBody = response?.data;
-              resolve({
-                ok: (response?.status ?? 0) >= 200 && (response?.status ?? 0) < 300,
-                status: response?.status ?? 0,
-                statusText: response?.statusText || "",
-                headers: response?.headers || {},
-                data: parseResponsePayload(rawBody),
-                rawBody,
-                transport: "my.request",
-                curl: buildCurlCommandInline({
-                  ...requestConfig,
-                  headers,
-                }),
-              });
-            },
-            fail(error) {
-              reject(error);
-            },
-          });
-        });
-      }
-
-      async function executeHttpRequestInline(requestConfig) {
-        const myApi = globalThis.my;
-        if (myApi && typeof myApi.request === "function") {
-          try {
-            return await executeMyRequestInline(requestConfig);
-          } catch (error) {
-            logApplyToken("my.request lanzo excepcion", {
-              error: error?.message || String(error),
-            });
-            throw error;
-          }
-        }
-
-        if (typeof fetch === "function") {
-          const hasBody = requestConfig.data !== undefined;
-          const headers = hasBody ? { "Content-Type": "application/json" } : {};
-          Object.assign(headers, requestConfig.headers ?? {});
-          let response;
-
-          try {
-            response = await fetch(requestConfig.url, {
-              method: requestConfig.method || "GET",
-              headers,
-              body: hasBody ? JSON.stringify(requestConfig.data) : undefined,
-            });
-          } catch (error) {
-            const failureDetails = buildFetchFailureDetails(requestConfig, error);
-            logApplyToken("Fetch lanzo excepcion", failureDetails);
-            throw Object.assign(new TypeError(failureDetails.error), failureDetails);
-          }
-          const rawBody = await response.text();
-
-          return {
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries()),
-            data: parseResponsePayload(rawBody),
-            rawBody,
-            transport: "fetch",
-            curl: buildCurlCommandInline({
-              ...requestConfig,
-              headers,
-            }),
-          };
-        }
-
-        throw new TypeError("fetch no esta disponible en la vista.");
-      }
-
-      async function getTokensInline() {
-        const myApi = getMyApi();
-        logApplyToken("Solicitando MQFetchSelfcareParameters");
-
-        try {
-          const { result } = await myApi.call("MQFetchSelfcareParameters", {});
-          logApplyToken("MQFetchSelfcareParameters respondio", result || {});
-          return result || {};
-        } catch (error) {
-          logApplyToken("Fallo MQFetchSelfcareParameters", {
-            error: error?.message || String(error),
-          });
-          console.warn("No fue posible obtener tokens MQFetchSelfcareParameters", error);
-          return {};
-        }
-      }
-
-      function generateSignatureFormatInline(globaldata, requestGateway, requestTimeGateway, url) {
-        return {
-          HTTP_METHOD: "POST",
-          URL: url,
-          CLIENT_ID: globaldata.clientId,
-          MERCHANT_ID: globaldata.merchantId,
-          REQUEST_TIME: requestTimeGateway,
-          PRIVATE_KEY: globaldata.privateKey,
-          reqMap: {
-            ...requestGateway,
-          },
-        };
-      }
-
-      async function getConfigAccessTokenInline(data) {
-        const authCode = authCodeActual;
-        const appId = appIdActual;
-
-        logApplyToken("Preparando payload de applyToken", {
-          appIdDisponible: Boolean(appId),
-          authCodeDisponible: Boolean(authCode),
-          clientId: data.clientId,
-          merchantId: data.merchantId,
-        });
-
-        if (!authCode) {
-          logApplyToken("No existe authCode para applyToken");
-          throw new Error("No hay authCode disponible desde el flujo inicial.");
-        }
-
-        if (!appId) {
-          logApplyToken("No existe appId para applyToken");
-          throw new Error("No hay appId disponible desde el flujo inicial.");
-        }
-
-        const body = {
-          appId,
-          grantType: "AUTHORIZATION_CODE",
-          authClientId: data.clientId,
-          authCode,
-        };
-
-        const requestTimeGateway = Math.floor(Date.now() / 1000).toString();
-        const url = "/miniprogram/api/v2/authorization/applyToken";
-        const signatureFormat = generateSignatureFormatInline(data, body, requestTimeGateway, url);
-        logApplyToken("Generando firma de applyToken", {
-          requestTimeGateway,
-          url,
-          body,
-        });
-        const signature = signGeneratorInline(signatureFormat);
-        logApplyToken("Firma de applyToken generada", {
-          signaturePreview: signature.slice(0, 80),
-        });
-
-        return {
-          clientId: data.clientId,
-          merchantId: data.merchantId,
-          signature,
-          requestTimeGateway,
-          body,
-        };
-      }
-
-      async function getAccessTokenInline(url, dataService) {
-        applyTokenLiveLog = [];
-        openApiDebug.applyTokenResponse = {
-          stage: "applyToken",
-          status: "pending",
-        };
-        logApplyToken("Inicio de applyToken", {
-          url,
-          environmentClientId: dataService?.clientId,
-          environmentMerchantId: dataService?.merchantId,
-        });
-        actualizarPanelesOpenApi();
-
-        try {
-          const data = await getConfigAccessTokenInline(dataService);
-          const requestConfig = {
-            url: `${url}applyToken`,
-            method: "POST",
-            data: data.body,
-            headers: {
-              "Client-Id": data.clientId,
-              "Request-Time": data.requestTimeGateway,
-              Signature: data.signature,
-              "Merchant-id": data.merchantId,
-            },
-          };
-
-          openApiDebug.applyTokenRequest = buildCurlCommandInline(requestConfig);
-          logApplyToken("Curl de applyToken generado", {
-            curlPreview: openApiDebug.applyTokenRequest,
-          });
-          actualizarPanelesOpenApi();
-
-          logApplyToken("Enviando fetch de applyToken", {
-            url: requestConfig.url,
-            method: requestConfig.method,
-          });
-          const response = await executeHttpRequestInline(requestConfig);
-          logApplyToken("Fetch de applyToken respondio", {
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-          });
-          openApiDebug.applyTokenResponse = response;
-          actualizarPanelesOpenApi();
-
-          return response;
-        } catch (error) {
-          logApplyToken("ApplyToken fallo", {
-            error: error?.message || String(error),
-            stack: error?.stack || null,
-            probableCause: error?.probableCause || null,
-            currentOrigin: error?.currentOrigin || null,
-            targetOrigin: error?.targetOrigin || null,
-          });
-          openApiDebug.applyTokenResponse = {
-            stage: "applyToken",
-            status: "error",
-            error: error?.message || String(error),
-            authCodeDisponible: Boolean(authCodeActual),
-            appIdDisponible: Boolean(appIdActual),
-            probableCause: error?.probableCause || "Error de red o CORS",
-            currentOrigin: error?.currentOrigin || globalThis.location?.origin || null,
-            targetOrigin: error?.targetOrigin || null,
-            online: error?.online,
-            url: error?.url || `${url}applyToken`,
-          };
-          actualizarPanelesOpenApi();
-          throw error;
-        }
-      }
-
-      async function getConfigInquiryUserInfoInline(url) {
-        const runtimeConfig = getRuntimeConfig();
-        const data = runtimeConfig.getGWPConfig(runtimeConfig.ENV);
-        const responseAccessToken = await getAccessTokenInline(url, data);
-        const appId = appIdActual;
-
-        if (!appId) {
-          throw new Error("No hay appId disponible desde el flujo inicial.");
-        }
-
-        const body = {
-          appId,
-          accessToken: responseAccessToken?.data?.accessToken || "",
-          authClientId: data.clientId,
-        };
-
-        const requestTimeGateway = Math.floor(Date.now() / 1000).toString();
-        const urlConfig = "/miniprogram/api/v2/users/inquiryUserBasicInfo";
-        const signatureFormat = generateSignatureFormatInline(data, body, requestTimeGateway, urlConfig);
-        const signature = signGeneratorInline(signatureFormat);
-
-        return {
-          clientId: data.clientId,
-          merchantId: data.merchantId,
-          signature,
-          requestTimeGateway,
-          body,
-        };
-      }
-
-      async function getInquiryUserInfoInline(urlUsers, urlApplyToken) {
-        const tokens = await getTokensInline();
-        const data = await getConfigInquiryUserInfoInline(urlApplyToken);
-        const requestConfig = {
-          url: `${urlUsers}inquiryUserBasicInfo`,
-          method: "POST",
-          data: data.body,
-          headers: {
-            "Client-Id": data.clientId,
-            "Request-Time": data.requestTimeGateway,
-            Signature: data.signature,
-            "Merchant-id": data.merchantId,
-            "X-MC-DEVICE-ID": tokens.device_id || "",
-            "X-MC-USER-AGENT": tokens.user_agent || "",
-          },
-        };
-
-        openApiDebug.inquiryRequest = buildCurlCommandInline(requestConfig);
-        actualizarPanelesOpenApi();
-
-        const response = await executeHttpRequestInline(requestConfig);
-        openApiDebug.inquiryResponse = response;
-        actualizarPanelesOpenApi();
-
-        return response;
-      }
-
-      // Ejecuta el consumo de OpenAPIs directamente desde la vista web.
-      async function consultarOpenApiUsuario() {
-        if (openApiSolicitado) {
+      function requestGetData() {
+        if (!globalThis.my || typeof globalThis.my.postMessage !== "function") {
+          setStatus("No se detecta bridge de mini program (my.postMessage).", "bad");
           return;
         }
 
-        openApiSolicitado = true;
-        actualizarEstado("Consumiendo OpenAPIs desde la vista...", "info");
-        actualizarPanelesOpenApi();
-
-        try {
-          const runtimeConfig = getRuntimeConfig();
-          const baseUrl = runtimeConfig.userInfo;
-          const urlApplyToken = `${baseUrl}miniprogram/api/v2/authorization/`;
-          const urlUsers = `${baseUrl}miniprogram/api/v2/users/`;
-
-          await getInquiryUserInfoInline(urlUsers, urlApplyToken);
-          actualizarEstado("OpenAPI inquiryUserBasicInfo consumida correctamente.", "success");
-        } catch (error) {
-          openApiDebug.inquiryResponse = {
-            error: error?.message || String(error),
-            raw: error,
-          };
-          actualizarPanelesOpenApi();
-          actualizarEstado("Fallo al consumir OpenAPIs desde la vista.", "error");
-        }
-      }
-
-      // Solicita al mini programa el appID.
-      function obtenerAppId() {
-        if (appIdSolicitado) {
-          return;
-        }
-        appIdSolicitado = true;
-
-        const message = {
-          action: "getAppID",
-          requestId: "req_appid_" + Date.now(),
-          timestamp: new Date().toISOString(),
-        };
-
-        if (!enviarSolicitudAlMiniPrograma(message)) {
-          actualizarEstado("No fue posible enviar la solicitud de appID.", "error");
-        }
-      }
-
-      // Solicita al mini programa el permiso auth_base para obtener authCode.
-      function obtenerAuthCode() {
-        if (authCodeSolicitado) {
-          return;
-        }
-        authCodeSolicitado = true;
-
-        actualizarEstado("Solicitando autorizacion...", "info");
-
-        const message = {
-          action: "getAuthCode",
-          scopes: ["auth_base"],
-          requestId: "req_" + Date.now(),
-          timestamp: new Date().toISOString(),
-        };
-
-        if (!enviarSolicitudAlMiniPrograma(message)) {
-          actualizarEstado("No fue posible enviar la solicitud de authCode.", "error");
-        }
-      }
-
-      // Solicita al mini programa la data basica del usuario.
-      function obtenerDatosUsuario() {
-        if (userDataSolicitado && userDataRecibida) {
-          return;
-        }
-        userDataSolicitado = true;
-        userDataIntentos += 1;
+        state.attempts += 1;
 
         const message = {
           action: "getData",
-          requestId: "req_userdata_" + userDataIntentos + "_" + Date.now(),
-          timestamp: new Date().toISOString(),
+          requestId: "req_getdata_" + state.attempts + "_" + Date.now(),
+          ts: Date.now(),
         };
 
-        if (!enviarSolicitudAlMiniPrograma(message)) {
-          actualizarEstado("No fue posible enviar la solicitud getData.", "error");
+        try {
+          globalThis.my.postMessage({ data: message });
+          setStatus("Solicitando getData (intento " + state.attempts + "/" + state.maxAttempts + ")...", "warn");
+        } catch (error) {
+          setStatus("Fallo enviando getData: " + (error && error.message ? error.message : String(error)), "bad");
           return;
         }
 
-        setTimeout(verificarReintentoDatosUsuario, 1200);
-      }
-
-      // Verifica entorno Alipay y deja listo el listener para recibir authCode.
-      function inicializar() {
-        if (globalThis.my && typeof globalThis.my.postMessage === "function") {
-          if (configurarEscuchaDeMensajes()) {
-            actualizarEstado("Entorno listo para solicitar appID y authCode.", "success");
-            obtenerDatosUsuario();
-            obtenerAppId();
-            obtenerAuthCode();
-          } else {
-            actualizarEstado("No fue posible configurar la escucha de mensajes.", "error");
+        setTimeout(function retryIfNeeded() {
+          if (!state.received && state.attempts < state.maxAttempts) {
+            requestGetData();
+            return;
           }
-        } else {
-          actualizarEstado("No se detecto entorno de mini programa Alipay.", "error");
+
+          if (!state.received && state.attempts >= state.maxAttempts) {
+            setStatus("No llego respuesta getDataUser luego de " + state.maxAttempts + " intentos.", "bad");
+          }
+        }, 900);
+      }
+
+      function start() {
+        renderUser({});
+
+        if (!registerOnMessage()) {
+          setStatus("No se detecta objeto my. Abre esta web desde el web-view del mini program.", "bad");
+          return;
         }
+
+        requestGetData();
       }
 
-      function inicializarDespuesDeCarga() {
-        setTimeout(inicializar, 100);
+      function onDomReady() {
+        setTimeout(start, 120);
       }
 
-      document.addEventListener("DOMContentLoaded", inicializarDespuesDeCarga);
+      document.addEventListener("DOMContentLoaded", onDomReady);
 
       if (document.readyState === "complete") {
-        setTimeout(inicializar, 100);
+        setTimeout(start, 120);
       }
     </script>
   </body>
